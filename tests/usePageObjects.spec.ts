@@ -2,6 +2,7 @@ import { test, expect} from '@playwright/test'
 import { NavigationPage } from "../page-objects/navigationPage"
 import { FormLayoutPage } from '../page-objects/formLayoutsPage'
 import { DatePickerPage } from '../page-objects/datepickerPage'
+import { PageManager } from '../page-objects/pageManager'
 
 
 //npm run start to start the localhost
@@ -11,12 +12,12 @@ test.beforeEach(async({page}) => {
 
 test('navigate to form page', async({page}) => {
     test.slow()
-    const navigateTo = new NavigationPage(page)
-        await navigateTo.formLayoutsPage()
-        await navigateTo.datepickerPage()
-        await navigateTo.smartTablePage()
-        await navigateTo.toastrPage()
-        await navigateTo.tooltipPage()
+    const pm = new PageManager(page)
+    // const navigateTo = new NavigationPage(page)
+        await pm.navigateTo().datepickerPage()
+        await pm.navigateTo().smartTablePage()
+        await pm.navigateTo().toastrPage()
+        await pm.navigateTo().tooltipPage()
 
 })
 
