@@ -1,66 +1,69 @@
-import { Page, expect } from '@playwright/test'
+// page-objects/datepickerPage.ts
+import { Page, expect } from '@playwright/test';                  // Page & assertions
+import { HelperBase } from './helperBase';                        // Base class for common helpers
 
-export class DatePickerPage{
+// DatepickerPage extends HelperBase to reuse shared methods
+export class DatepickerPage extends HelperBase {
+  constructor(page: Page) {
+    super(page);                                                  // Call base constructor
+  }
 
-    private readonly page: Page
+  /**
+   * Opens the common date picker and selects a date N days from today
+   */
+  async selectCommonDatePickerDateFromToday(offset: number) {
+    const calendarInput = this.page.getByPlaceholder('Form Picker');
+    await calendarInput.click();                                  // Open the picker
+    const dateString = await this.selectDateInTheCalendar(offset);
+    await expect(calendarInput).toHaveValue(dateString);          // Verify input value updated
+  }
 
-    constructor(page: Page){
-        this.page = page
+  /**
+   * Opens the range date picker and selects a start/end range
+   */
+  async selectDatepickerWithRangeFromToday(startOffset: number, endOffset: number) {
+    const calendarInput = this.page.getByPlaceholder('Range Picker');
+    await calendarInput.click();                                  // Open the range picker
+    const startDate = await this.selectDateInTheCalendar(startOffset);
+    const endDate = await this.selectDateInTheCalendar(endOffset);
+    const rangeString = `${startDate} - ${endDate}`;
+    await expect(calendarInput).toHaveValue(rangeString);         // Verify range value
+  }
+
+  /**
+   * Core method to navigate the calendar UI and click the correct day cell
+   */
+  private async selectDateInTheCalendar(offset: number): Promise<string> {
+    // Calculate the target date
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    const dayStr = date.getDate().toString();                     // e.g. "30"
+    const monthShort = date.toLocaleString('en-US', { month: 'short' }); // e.g. "Jul"
+    const monthLong = date.toLocaleString('en-US', { month: 'long' });   // e.g. "July"
+    const year = date.getFullYear();                              // e.g. 2025
+    const formatted = `${monthShort} ${dayStr}, ${year}`;        // e.g. "Jul 30, 2025"
+
+    // Advance calendar until the correct month/year appears
+    let header = await this.page.locator('nb-calendar-view-mode').textContent();
+    const target = `${monthLong} ${year}`;
+    while (!header.includes(target)) {
+      await this.page
+        .locator('nb-calendar-pageable-navigation [data-name="chevron-right"]')
+        .click();                                                  // Next month arrow
+      header = await this.page.locator('nb-calendar-view-mode').textContent();
     }
 
-    /**
-     * 
-     * @param numberOfDaysFromToday 
-     */
-    async selectCommonDatePickerDateFromToday(numberOfDaysFromToday: number){
-        const calendarInputField = this.page.getByPlaceholder(`Form Picker`)
-        await calendarInputField.click() //clicking on the calendar input field
-        const dateToAssert = await this.selectDateInTheCalendar(numberOfDaysFromToday)
-        await expect(calendarInputField).toHaveValue(dateToAssert)     
+    // Filter only current-month day cells, click the first matching day
+    const days = this.page
+      .locator('.day-cell.ng-star-inserted:not(.bounding-month)')
+      .filter({ hasText: dayStr });                               // Text match
+    const count = await days.count();                             // How many matches?
+    console.log(`Found ${count} day(s) matching "${dayStr}"`);
+    if (count === 0) {
+      throw new Error(`No day matching "${dayStr}" found`);
     }
+    await days.first().click();                                   // Click the first one
 
-    /**
-     * 
-     * @param startDayFromToday 
-     * @param endDayFromToday 
-     */
-    async selectDatepickerWithRangeFromToday(startDayFromToday: number, endDayFromToday: number){
-        const calendarInputField = this.page.getByPlaceholder('Range Picker')
-        await calendarInputField.click()
-        const dateToAssertStart = await this.selectDateInTheCalendar(startDayFromToday)
-        const dateToAssertEnd = await this.selectDateInTheCalendar(endDayFromToday)
-        const dateToAssert = `${dateToAssertStart} - ${dateToAssertEnd}`
-        await expect(calendarInputField).toHaveValue(dateToAssert)
-    }
-
-    /**
-     * 
-     * @param numberOfDaysFromToday 
-     * @returns 
-     */
-    private async selectDateInTheCalendar(numberOfDaysFromToday: number){
-         let date = new Date()
-            date.setDate(date.getDate() + numberOfDaysFromToday) //setting the date to tomorrow
-            const expectedDate = date.getDate().toString()
-            const expectedMonthShort = date.toLocaleString('En-US', { month: 'short' })
-            const expectedMonthLong = date.toLocaleString('En-US', { month: 'long' })  //getting the month in short format
-            const expectedYear = date.getFullYear()
-            const dateToAssert = `${expectedMonthShort} ${expectedDate}, ${expectedYear}` //formatting the date to assert
-        
-            let calendarMonthAndYear = await this.page.locator(`nb-calendar-view-mode`).textContent()
-            const expectedMonthAndYear = `${expectedMonthLong} ${expectedYear}` //getting the month and year from the calendar
-            while(!calendarMonthAndYear.includes(expectedMonthAndYear)) { //looping until the calendar shows the expected month and year
-                await this.page.locator(`nb-calendar-pageable-navigation [data-name="chevron-right"]`).click() //clicking on
-                calendarMonthAndYear = await this.page.locator(`nb-calendar-view-mode`).textContent()
-            }
-            await this.page.locator(`.day-cell.ng-star-inserted`).getByText(expectedDate, {exact: true}).first().click() //clicking on the day 15 in the calendar
-
-            const matchingDays = await this.page.locator(`.day-cell.ng-star-inserted`).getByText(expectedDate, { exact: true });
-            console.log(`Found ${await matchingDays.count()} day(s) matching "${expectedDate}"`);
-
-            //await this.page.locator(`.day-cell.ng-star-inserted`).getByText(expectedDate, {exact: true}).first().click() //clicking on the day 15 in the calendar
-            return dateToAssert
-
-
-    }
+    return formatted;                                             // Return for assertion
+  }
 }

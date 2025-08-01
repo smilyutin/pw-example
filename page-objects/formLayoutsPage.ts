@@ -1,11 +1,12 @@
 import { Page } from '@playwright/test'
+import { HelperBase } from './helperBase'
 
-export class FormLayoutPage {
 
-    private readonly page: Page
 
-    constructor(page: Page){
-        this.page = page
+export class FormLayoutPage extends HelperBase {
+
+    constructor(page: Page) {
+    super(page);  
     }
 
     /**
