@@ -31,17 +31,21 @@ test('parametrized methods', async ({ page }) => {
   await pm.navigateTo().formLayoutsPage();                       // Go to form page
   await pm.onFormLayoutsPage()
     .submitUsingTheGridFormWithCredentialsAndSelectOption(
-      'test@test.ca',                                            // email value
-      'shoultc',                                                 // password value
+      process.env.USERNAME,                                            // email value
+      process.env.PASSWORD,                                                 // password value
       'Option 1'                                                 // dropdown selection
     );
+    await page.screenshot({path: 'screenshots/formLayoutsPage.png'})
+    const buffer = await page.screenshot()
+    console.log(buffer.toString('base64'))
+
   await pm.onFormLayoutsPage()
     .submitInLineFormWithNameEmailAndCheckbox(
       randomFullName,                                           // name input
       randomEmail,                                        // email input
       true  );                                                // checkbox toggle
     
-
+await page.locator('nb-card', {hasText: "inline form"}).screenshot({path: 'screenshots/inlineForm.png'})  
   // Datepicker interactions
   // await pm.navigateTo().datepickerPage();                        // Open datepicker
   // await pm.onDatepickerPage().selectCommonDatePickerDateFromToday(2);  // Select date 2 days ahead

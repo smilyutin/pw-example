@@ -3,7 +3,7 @@ import {test, expect} from '@playwright/test'
 
 //hook to run before each test
 test.beforeEach(async({page}) => {
-    await page.goto(`http://localhost:4200/`)//
+    await page.goto(`/`)//
     await page.click(`text=Forms`)
     //await page.getByText(`Form Layouts`).click()
     await page.click(`text=Form Layouts`)
