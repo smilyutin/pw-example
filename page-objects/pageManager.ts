@@ -1,32 +1,35 @@
-import { Page, expect } from '@playwright/test'
-import { NavigationPage } from "../page-objects/navigationPage"
-import { FormLayoutPage } from '../page-objects/formLayoutsPage'
-import { DatePickerPage } from '../page-objects/datepickerPage'
+// page-objects/pageManager.ts
+import { Page } from '@playwright/test';                          // Playwright Page type
+import { NavigationPage } from './navigationPage';                // Navigation helpers
+import { FormLayoutPage } from './formLayoutsPage';               // Form page helpers
+import { DatepickerPage } from './datepickerPage';                 // Datepicker helpers
 
+// PageManager centralizes all page objects behind a single interface
 export class PageManager {
-    private readonly page: Page
-    private readonly navigationPage: NavigationPage
-    private readonly formLayoutsPage: FormLayoutPage
-    private readonly datepickerPage: DatePickerPage
+  private readonly page: Page;
+  private readonly navigationPage: NavigationPage;
+  private readonly formLayoutsPage: FormLayoutPage;
+  private readonly datepickerPage: DatepickerPage;
 
-    constructor( page: Page) {
-        this.page = page
-        this.navigationPage = new NavigationPage(this.page)
-        this.formLayoutsPage = new FormLayoutPage(this.page)
-        this.datepickerPage = new DatePickerPage(this.page)
-    }
+  constructor(page: Page) {
+    this.page = page;                                            // Assign the Playwright page
+    this.navigationPage = new NavigationPage(page);              // Instantiate Navigation
+    this.formLayoutsPage = new FormLayoutPage(page);            // Instantiate Form Layout
+    this.datepickerPage = new DatepickerPage(page);             // Instantiate Datepicker
+  }
 
-    navigateTo(){
-        return this.navigationPage
-    }
+  // Return the navigation object to drive clicking through menus
+  navigateTo() {
+    return this.navigationPage;
+  }
 
-    onFormLayoutsPage(){
-        return this.formLayoutsPage
-    }
+  // Return the form layouts page object for form interactions
+  onFormLayoutsPage() {
+    return this.formLayoutsPage;
+  }
 
-    onDatepickerPage(){
-        return this.datepickerPage
-    }
-
-
+  // Return the datepicker page object for date interactions
+  onDatepickerPage() {
+    return this.datepickerPage;
+  }
 }

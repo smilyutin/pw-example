@@ -1,20 +1,22 @@
 import { Page } from '@playwright/test'
-export class NavigationPage {
-    readonly page: Page
+import { HelperBase } from './helperBase'
+
+
+export class NavigationPage extends HelperBase{
 
     constructor(page: Page){
-        this.page = page
+        super(page)
     }
  
     async formLayoutsPage(){
         await this.selectGroupMenuItem('Forms')
-        await this.page.waitForTimeout(2000)
+        await this.waitForNumberOfSeconds(3)
         await this.page.getByText(`Form Layouts`).click()
         await this.selectGroupMenuItem('Forms')
     }
     async datepickerPage(){
         await this.selectGroupMenuItem('Forms')
-        await this.page.waitForTimeout(2000)
+        await this.waitForNumberOfSeconds(3)
         await this.page.getByText(`Datepicker`).click()
     }
     async smartTablePage(){
@@ -28,7 +30,7 @@ export class NavigationPage {
     }
     async tooltipPage (){
         await this.selectGroupMenuItem(`Modal & Overlays`)
-        // await this.page.waitForTimeout(2000)
+        await this.waitForNumberOfSeconds(1)
         await this.page.getByText(`Tooltip`).click()
     }
     private async selectGroupMenuItem(groupItemTitle: string){
