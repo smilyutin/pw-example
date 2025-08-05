@@ -1,5 +1,5 @@
 // tests/usePageObjects.spec.ts
-import { test, expect } from '@playwright/test';                // Playwright test runner APIs
+import { test, expect } from '../test-options' //'@playwright/test';                // Playwright test runner APIs
 import { PageManager } from '../page-objects/pageManager';         // Centralized page manager
 import { faker} from '@faker-js/faker'
 
