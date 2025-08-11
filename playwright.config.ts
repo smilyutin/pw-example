@@ -1,24 +1,23 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as path from 'path';
 import type { TestOptions } from './test-options';
 require('dotenv').config();
 
 export default defineConfig<TestOptions>({
-  expect: {
-    timeout: 5000,
-  },
-  testDir: './tests',
+  testDir: path.join(__dirname, 'tests'),
+  outputDir: path.join(__dirname, 'test-results'),
+  reporter: [['html', { outputFolder: path.join(__dirname, 'playwright-report'), open: 'never' }]],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 2,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
 
   use: {
     globalsQaURL: 'https://www.globalsqa.com/demo-site/draganddrop/',
     baseURL: process.env.DEV === '1' ? 'http://localhost:4200'
           : process.env.STAGING === '1' ? 'http://localhost:4200'
           : 'http://localhost:4200',
-    headless: false,
+    headless: !!process.env.CI,
     viewport: { width: 1280, height: 720 },
     trace: 'on-first-retry',
     navigationTimeout: 6000,
@@ -37,17 +36,23 @@ export default defineConfig<TestOptions>({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'firefox',
-      use: {
-        browserName: 'firefox',
-        video: { mode: 'on', size: { width: 1920, height: 1080 } }, // ✅ Correct placement
-      },
-    },
+    // {
+    //   name: 'firefox',
+    //   use: {
+    //     browserName: 'firefox',
+    //     video: { mode: 'on', size: { width: 1920, height: 1080 } }, // ✅ Correct placement
+    //   },
+    // },
     {
       name: 'pageObjectFullScreen',
       testMatch: 'usePageObjects.spec.ts',
       use: { viewport: { width: 1920, height: 1080 } },
     },
   ],
+  webServer: {
+  command: 'npm run start -- --host 0.0.0.0', // bind Angular to all interfaces
+  url: 'http://localhost:4200/',
+  timeout: 120000,            // give Angular more time
+  reuseExistingServer: false,  // inside CI/container, start fresh
+},
 });

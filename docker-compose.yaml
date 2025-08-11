@@ -1,0 +1,14 @@
+services:
+  playwright-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      CI: "1"                # makes Playwright headless
+    command: >
+      bash -lc "xvfb-run -a npx playwright test tests/uiComponents.spec.ts
+                --project=chromium --config=playwright.config.ts"
+    volumes:
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results
+    shm_size: 2gb
