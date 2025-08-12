@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
+    environment: #ci
       CI: "1"                # makes Playwright headless
     command: >
       bash -lc "xvfb-run -a npx playwright test tests/uiComponents.spec.ts
