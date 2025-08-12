@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 16.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16.20.2'
+          cache: 'npm'
+
+      # If you regenerated the lockfile as above, npm ci will now work.
+      # Keep legacy-peer-deps to avoid peer warnings becoming errors with old libs.
+      - name: Install deps (clean)
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
+        run: npm run build
+
+      # Optional: run unit tests if you have them configured
+      # - name: Test
+      #   run: npm test -- --watch=false --browsers=ChromeHeadless
