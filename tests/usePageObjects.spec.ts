@@ -59,7 +59,7 @@ test.only('testing with agros ci', async ({ page }) => {
 
   // Use the navigation page under the manager to visit each section
   await pm.navigateTo().formLayoutsPage();                       // Click "Form Layouts"
-  await pm.navigateTo().datepickerPage();                        // Click "Datepicker"
+  //await pm.navigateTo().datepickerPage();                        // Click "Datepicker"
   // await pm.navigateTo().smartTablePage();                        // Click "Smart Table"
   // await pm.navigateTo().toastrPage();                           // Click "Toastr"
   // await pm.navigateTo().tooltipPage();                          // Click "Tooltip"

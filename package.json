@@ -10,6 +10,7 @@
     "ng": "ng",
     "start": "ng serve",
     "pageObjects-chrome": "npx playwright test usePageObjects.spec.ts --project=chromium",
+    "uiComponents-chrome": "npx playwright test uiComponents.spec.ts --project=chromium",
     "pageObjects-firefox": "npx playwright test usePageObjects.spec.ts --project=firefox",
     "pageObjects-all": "npm run pageObjects-chrome && npm run pageObjects-firefox",
     "autoWait-dev": "URL=http://uitestingplayground.com/ajax npx playwright test autoWaiting.spec.ts --project=chromium"
