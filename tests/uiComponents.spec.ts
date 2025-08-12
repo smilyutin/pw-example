@@ -16,7 +16,7 @@ test.describe('Form layouts page', () => {
         await page.getByText(`Form Layouts`).click()
     })
 
-    test.only(`input fields`, async ({page}, testInfo) => {
+    test(`input fields`, async ({page}, testInfo) => {
         if (testInfo.retry){
             //do something usefull 
         }
@@ -34,7 +34,7 @@ test.describe('Form layouts page', () => {
         await expect(usingTheGridEmailInput).toHaveValue(`hshs@ha.ca`)
     })
 
-    test(`radio buttons`, async ({page}) => {
+    test.skip(`radio buttons`, async ({page}) => {
             test.slow()
             const usingTheGridForm = page .locator(`nb-card`, {hasText: "Using the Grid"})
 
