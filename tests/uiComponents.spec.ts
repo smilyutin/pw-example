@@ -16,7 +16,7 @@ test.describe('Form layouts page', () => {
         await page.getByText(`Form Layouts`).click()
     })
 
-    test(`input fields`, async ({page}, testInfo) => {
+    test.only(`input fields`, async ({page}, testInfo) => {
         if (testInfo.retry){
             //do something usefull 
         }
