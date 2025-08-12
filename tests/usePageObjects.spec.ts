@@ -51,3 +51,16 @@ await page.locator('nb-card', {hasText: "inline form"}).screenshot({path: 'scree
   // await pm.onDatepickerPage().selectCommonDatePickerDateFromToday(2);  // Select date 2 days ahead
   // await pm.onDatepickerPage().selectDatepickerWithRangeFromToday(0, 2);  // Select range today to +2 days
 });
+
+
+test.only('testing with agros ci', async ({ page }) => {
+  test.slow();                                                   // Mark this test as slow for extra timeout
+  const pm = new PageManager(page);                              // Instantiate manager with the Playwright page
+
+  // Use the navigation page under the manager to visit each section
+  await pm.navigateTo().formLayoutsPage();                       // Click "Form Layouts"
+  await pm.navigateTo().datepickerPage();                        // Click "Datepicker"
+  // await pm.navigateTo().smartTablePage();                        // Click "Smart Table"
+  // await pm.navigateTo().toastrPage();                           // Click "Toastr"
+  // await pm.navigateTo().tooltipPage();                          // Click "Tooltip"
+});
