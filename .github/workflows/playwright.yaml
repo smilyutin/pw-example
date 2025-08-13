@@ -40,7 +40,7 @@ jobs:
         run: npx playwright install --with-deps --force
 
       - name: Run Playwright tests
-        run: npm run pageObjects-chrome
+        run: npm run pageObjectsArgos-chrome
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
