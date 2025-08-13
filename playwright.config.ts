@@ -20,6 +20,7 @@ export default defineConfig<TestOptions>({
       {
         // Upload to Argos on CI only.
         uploadToArgos: !!process.env.CI,
+        token: process.env.ARGOS_TOKEN,
       },
     ],
     ['html', { outputFolder: path.join(__dirname, 'playwright-report'), open: 'never' }],
