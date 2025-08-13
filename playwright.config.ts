@@ -14,6 +14,14 @@ export default defineConfig<TestOptions>({
   outputDir: path.join(__dirname, 'test-results'),
 
   reporter: [
+    process.env.CI ? ["dot"] : ["list"],
+    [
+      "@argos-ci/playwright/reporter",
+      {
+        // Upload to Argos on CI only.
+        uploadToArgos: !!process.env.CI,
+      },
+    ],
     ['html', { outputFolder: path.join(__dirname, 'playwright-report'), open: 'never' }],
     ['github'],
   ],
@@ -29,6 +37,7 @@ export default defineConfig<TestOptions>({
     headless: !!process.env.CI,
     viewport: { width: 1280, height: 720 },
     trace: 'on-first-retry',
+    screenshot: "only-on-failure",
     navigationTimeout: 6000,
   },
 

@@ -40,7 +40,7 @@ jobs:
         run: npx playwright install --with-deps --force
 
       - name: Run Playwright tests
-        run: npm run uiComponents-chrome
+        run: npm run pageObjects-chrome
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
