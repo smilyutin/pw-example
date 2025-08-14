@@ -1,3 +1,4 @@
+
 name: Playwright Tests
 
 on:
@@ -13,8 +14,8 @@ jobs:
     timeout-minutes: 60
     env:
       CI: true
-      BASE_URL: https://www.demoblaze.com
-      ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+      BASE_URL: https://www.demoblaze.com 
+      # ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
 
     steps:
       - name: Checkout
