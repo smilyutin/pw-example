@@ -32,7 +32,6 @@
     "@angular/platform-browser-dynamic": "^14.2.12",
     "@angular/router": "^14.2.12",
     "@asymmetrik/ngx-leaflet": "3.0.1",
-    "@babel/runtime": "^7.28.3",
     "@nebular/auth": "10.0.0",
     "@nebular/eva-icons": "10.0.0",
     "@nebular/security": "10.0.0",
@@ -73,6 +72,8 @@
     "@angular/cli": "^14.2.13",
     "@angular/compiler-cli": "^14.2.12",
     "@angular/language-service": "14.2.12",
+    "@babel/plugin-transform-runtime": "7.28.0",
+    "@babel/runtime": "7.28.2",
     "@compodoc/compodoc": "1.1.26",
     "@faker-js/faker": "^8.4.1",
     "@fortawesome/fontawesome-free": "^5.2.0",
@@ -102,9 +103,5 @@
   "bugs": {
     "url": "https://github.com/bondar-artem/pw-practice-app/issues"
   },
-  "homepage": "https://github.com/bondar-artem/pw-practice-app#readme",
-  "overrides": {
-    "@babel/runtime": "^7.28.0",
-    "@babel/plugin-transform-runtime": "^7.28.0"
-  }
+  "homepage": "https://github.com/bondar-artem/pw-practice-app#readme"
 }
