@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Angular 14 prefers Node 16
       - uses: actions/setup-node@v4
         with:
           node-version: '16'
@@ -45,9 +46,11 @@ jobs:
       NPM_CONFIG_AUDIT: "false"
       NPM_CONFIG_FUND: "false"
       PW_FORBID_ONLY: "1"
+      ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}   # ← expose secret as env var for this job
     steps:
       - uses: actions/checkout@v4
 
+      # Node 20 for Playwright
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -72,19 +75,19 @@ jobs:
 
       # Install Argos only when token is present
       - name: Install Argos (CI only)
-
-        if: ${{ ARGOS_TOKEN && secrets.ARGOS_TOKEN != '' }}
+        if: ${{ env.ARGOS_TOKEN != '' }}
         run: npm i -D @argos-ci/playwright
 
       # Run with Argos config when token is present
       - name: Playwright tests (with Argos)
-        if: ${{ secrets.ARGOS_TOKEN && secrets.ARGOS_TOKEN != '' }}
+        if: ${{ env.ARGOS_TOKEN != '' }}
         run: npx playwright test -c playwright.argos.config.ts --reporter=line
 
       # Fallback run when no Argos
       - name: Playwright tests (no Argos)
-        if: ${{ !secrets.ARGOS_TOKEN || secrets.ARGOS_TOKEN == '' }}
+        if: ${{ env.ARGOS_TOKEN == '' }}
         run: npx playwright test --reporter=line
+
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
