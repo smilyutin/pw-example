@@ -53,7 +53,10 @@ jobs:
       NPM_CONFIG_AUDIT: "false"
       NPM_CONFIG_FUND: "false"
       PW_FORBID_ONLY: "1"
+      # Expose Argos token (empty string if not set) for conditional install/run
       ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN || '' }}
+      # 🔑 Base URL for your tests (picked up by test-options.ts / config)
+      QA_URL: http://localhost:4200
     steps:
       - uses: actions/checkout@v4
 
@@ -82,10 +85,15 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: dist
-        # NOTE: path omitted so it restores to ./dist (default from upload)
+          path: dist
 
-      # Install Argos ONLY if a token exists, WITHOUT altering lockfile,
-      # ignoring peer deps, and not failing the job if it still errors.
+      # ▶ Serve the built Angular app on port 4200 and wait for it
+      - name: Start web server
+        run: |
+          npx -y http-server dist -p 4200 -s -c-1 &
+          npx -y wait-on http://localhost:4200
+
+      # Install Argos ONLY if a token exists, without touching lockfile
       - name: Install Argos (CI only, lenient)
         id: argos_install
         if: ${{ env.ARGOS_TOKEN != '' }}
@@ -93,12 +101,12 @@ jobs:
         run: |
           npm install -D --no-save --legacy-peer-deps --no-audit --no-fund @argos-ci/playwright
 
-      # Run with Argos config ONLY if token is set AND install succeeded
+      # Run with Argos config if token is set AND install succeeded
       - name: Playwright tests (with Argos)
         if: ${{ env.ARGOS_TOKEN != '' && steps.argos_install.outcome == 'success' }}
         run: npx playwright test -c playwright.argos.config.ts --reporter=line
 
-      # Fallback: run default config (no Argos) when no token OR install failed
+      # Fallback: run default config when no token OR Argos install failed
       - name: Playwright tests (no Argos)
         if: ${{ env.ARGOS_TOKEN == '' || steps.argos_install.outcome != 'success' }}
         run: npx playwright test --reporter=line
