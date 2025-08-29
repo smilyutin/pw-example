@@ -7,18 +7,21 @@
     "url": "git+https://github.com/bondar-artem/pw-practice-app.git"
   },
   "scripts": {
+    "start": "ng serve",
     "test": "npx playwright test",
     "pw:doctor": "node pw-doc.js",
     "pom:doctor": "node pom-doc.js",
-    "ng": "ng",
-    "start": "ng serve",
+    "ng:start": "ng serve",
+    "pw:test": "npx playwright test",
     "pageObjectsArgos-chrome": "npx playwright test usePageObjectsArgos.spec.ts --project=chromium",
     "uiComponents-chrome": "npx playwright test uiComponents.spec.ts --project=chromium",
     "pageObjects-chrome": "npx playwright test usePageObjects.spec.ts --project=chromium",
     "pageObjects-all": "npm run pageObjects-chrome && npm run pageObjects-firefox",
-    "autoWait-dev": "URL=http://uitestingplayground.com/ajax npx playwright test autoWaiting.spec.ts --project=chromium"
+    "autoWait-dev": "URL=http://uitestingplayground.com/ajax npx playwright test autoWaiting.spec.ts --project=chromium",
+    "postinstall": "node scripts/conditional-pw-install.js"
   },
   "dependencies": {
+    "@akveo/ng2-completer": "^9.0.1",
     "@angular/animations": "^14.2.12",
     "@angular/cdk": "^14.2.7",
     "@angular/common": "^14.2.12",
@@ -29,6 +32,7 @@
     "@angular/platform-browser-dynamic": "^14.2.12",
     "@angular/router": "^14.2.12",
     "@asymmetrik/ngx-leaflet": "3.0.1",
+    "@babel/runtime": "^7.28.3",
     "@nebular/auth": "10.0.0",
     "@nebular/eva-icons": "10.0.0",
     "@nebular/security": "10.0.0",
@@ -44,8 +48,7 @@
     "ionicons": "2.0.1",
     "leaflet": "1.2.0",
     "nebular-icons": "1.1.0",
-    "ng2-completer": "^9.0.1",
-    "ng2-smart-table": "^1.6.0",
+    "ng2-smart-table": "1.6.0",
     "ngx-echarts": "^4.2.2",
     "normalize.css": "6.0.0",
     "pace-js": "1.0.2",
@@ -60,24 +63,19 @@
     "web-animations-js": "^2.3.2",
     "zone.js": "~0.11.4"
   },
-  "overrides": {
-    "@angular-devkit/build-angular": {
-      "@babel/runtime": "7.28.2",
-      "@babel/plugin-transform-runtime": "7.28.0",
-      "@playwright/test": "1.55.0",
-      "playwright": "1.55.0"
-    }
-  },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^14.2.11",
-    "@angular/cli": "^14.2.11",
+    "@angular-devkit/build-angular": "14.2.13",
+    "@angular-eslint/builder": "^14.4.0",
+    "@angular-eslint/eslint-plugin": "^14.4.0",
+    "@angular-eslint/eslint-plugin-template": "^14.4.0",
+    "@angular-eslint/schematics": "^14.4.0",
+    "@angular-eslint/template-parser": "^14.4.0",
+    "@angular/cli": "^14.2.13",
     "@angular/compiler-cli": "^14.2.12",
     "@angular/language-service": "14.2.12",
-    "@argos-ci/playwright": "^5.0.11",
-    "@compodoc/compodoc": "^1.1.19",
-    "@faker-js/faker": "^9.9.0",
+    "@compodoc/compodoc": "1.1.26",
+    "@faker-js/faker": "^8.4.1",
     "@fortawesome/fontawesome-free": "^5.2.0",
-    "@playwright/test": "^1.54.2",
     "@types/leaflet": "1.2.3",
     "@types/node": "16.11.68",
     "@types/sockjs": "0.3.33",
@@ -85,6 +83,7 @@
     "codelyzer": "^0.0.28",
     "conventional-changelog-cli": "^2.2.2",
     "dotenv": "^17.2.1",
+    "eslint": "^8.57.1",
     "npm-run-all": "4.0.2",
     "rimraf": "2.6.1",
     "stylelint": "^15.6.0",
@@ -103,5 +102,9 @@
   "bugs": {
     "url": "https://github.com/bondar-artem/pw-practice-app/issues"
   },
-  "homepage": "https://github.com/bondar-artem/pw-practice-app#readme"
+  "homepage": "https://github.com/bondar-artem/pw-practice-app#readme",
+  "overrides": {
+    "@babel/runtime": "^7.28.0",
+    "@babel/plugin-transform-runtime": "^7.28.0"
+  }
 }
