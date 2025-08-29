@@ -2,21 +2,19 @@ name: Playwright Tests
 
 on:
   push:
-    branches: ["**"]          # run on any branch
+    branches: ["**"]
   pull_request:
     branches: ["**"]
-  workflow_dispatch:          # allow manual runs
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-# Avoid overlapping runs on the same branch
 concurrency:
   group: playwright-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # Build Angular app on Node 16 (Angular 14 CLI prefers Node 16)
   build-angular:
     runs-on: ubuntu-latest
     steps:
@@ -27,11 +25,13 @@ jobs:
           node-version: '16'
           cache: 'npm'
 
-      # Tolerate legacy/incorrect peers to unblock CI
+      # Use legacy peer resolver to avoid Angular 14-era peer conflicts
       - run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      # Quick sanity
       - run: npx ng version
 
-      # If you need a production build artifact, uncomment below:
+      # If you actually need a build artifact, uncomment:
       # - run: npx ng build --configuration production
       # - uses: actions/upload-artifact@v4
       #   with:
@@ -40,29 +40,22 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
-    needs: [build-angular]     # drop if the build step isn't required
+    needs: [build-angular]  # remove if you don't need the build step
     steps:
       - uses: actions/checkout@v4
 
-      # Use Node 20 for Playwright tests
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # Same tolerant install flags here too
+      # Same resolver flags here
       - run: npm ci --legacy-peer-deps --no-audit --no-fund
 
-      # Install Playwright browsers
       - uses: microsoft/playwright-github-action@v1
 
-      # Optional: sanity check single @playwright/test version
-      - run: npm ls @playwright/test --all || true
-
-      # Run tests (tweak reporter / projects as you like)
       - run: npx playwright test --reporter=line
 
-      # Upload HTML report on failure
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
