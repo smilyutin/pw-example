@@ -20,13 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Angular 14 prefers Node 16
       - uses: actions/setup-node@v4
         with:
           node-version: '16'
           cache: 'npm'
 
-      # If your repo has a Node16-compatible lockfile, keep ci; otherwise fall back to install.
       - name: Install Angular deps
         shell: bash
         run: |
@@ -37,26 +35,26 @@ jobs:
             echo "⚠ npm ci failed, falling back to npm install"
             npm install --legacy-peer-deps --no-audit --no-fund
           fi
+
       - run: npx ng version
 
   tests:
     runs-on: ubuntu-latest
     needs: [build-angular]
+    env:
+      NPM_CONFIG_AUDIT: "false"
+      NPM_CONFIG_FUND: "false"
+      PW_FORBID_ONLY: "1"
     steps:
       - uses: actions/checkout@v4
 
-      # Playwright needs Node >=18; you want Node 20
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # Install repo deps (TS/linters/etc.). Use legacy peers to dodge old Angular peer chains.
       - name: Install test deps
         shell: bash
-        env:
-          NPM_CONFIG_AUDIT: "false"
-          NPM_CONFIG_FUND: "false"
         run: |
           set -e
           if npm ci --legacy-peer-deps --no-audit --no-fund; then
@@ -66,15 +64,27 @@ jobs:
             npm install --legacy-peer-deps --no-audit --no-fund
           fi
 
-      # ✅ Replace deprecated action with official CLI
-      - name: Install Playwright browsers + system deps
+      - name: Defocus tests (remove .only)
+        run: node scripts/strip-only.js
+
+      - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      # Run tests (adjust flags as you like)
-      - name: Playwright tests
-        run: npx playwright test --reporter=line
+      # Install Argos only when token is present
+      - name: Install Argos (CI only)
 
-      # Upload HTML report if tests fail
+        if: ${{ ARGOS_TOKEN && secrets.ARGOS_TOKEN != '' }}
+        run: npm i -D @argos-ci/playwright
+
+      # Run with Argos config when token is present
+      - name: Playwright tests (with Argos)
+        if: ${{ secrets.ARGOS_TOKEN && secrets.ARGOS_TOKEN != '' }}
+        run: npx playwright test -c playwright.argos.config.ts --reporter=line
+
+      # Fallback run when no Argos
+      - name: Playwright tests (no Argos)
+        if: ${{ !secrets.ARGOS_TOKEN || secrets.ARGOS_TOKEN == '' }}
+        run: npx playwright test --reporter=line
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

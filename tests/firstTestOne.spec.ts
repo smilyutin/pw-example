@@ -38,7 +38,7 @@ test(`locator sysntax rules`, async ({page}) => {
     page.locator(`:text-is("Using the Grid")`)
 })
 
-test.only(`User facing locators`, async ({page}) => {
+test(`User facing locators`, async ({page}) => {
     //by Label 
     await page.getByRole('textbox',{name:"Email"}).first().click()
 

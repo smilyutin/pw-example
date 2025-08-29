@@ -1,85 +1,40 @@
 import { defineConfig, devices } from '@playwright/test';
-import * as path from 'path';
-import type { TestOptions } from './test-options';
-import 'dotenv/config';
 
-// Helper: check if a module is installed before requiring it
-function hasModule(name: string): boolean {
-  try {
-    require.resolve(name);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-const BASE_URL =
-  process.env.BASE_URL ??
-  (process.env.DEV === '1'
-    ? 'http://localhost:4200'
-    : process.env.STAGING === '1'
-    ? 'http://localhost:4200'
-    : 'http://localhost:4200');
-
-// Base reporters (always available)
 const reporters: any[] = [
-  process.env.CI ? ['dot'] : ['list'],
-  ['html', { outputFolder: path.join(__dirname, 'playwright-report'), open: 'never' }],
-  ['github'],
+  // nice + portable defaults
+  ['list'],                           // local
+  // ['html'],                        // uncomment if you want HTML reporter locally
 ];
 
-// Add Argos reporter only if ARGOS_TOKEN is set and package is installed
-if (process.env.ARGOS_TOKEN && hasModule('@argos-ci/playwright/reporter')) {
-  reporters.push([
-    '@argos-ci/playwright/reporter',
-    {
-      uploadToArgos: !!process.env.CI,
-      token: process.env.ARGOS_TOKEN,
-    },
-  ]);
-} else if (process.env.ARGOS_TOKEN) {
-  console.warn(
-    '[playwright] ARGOS_TOKEN is set but @argos-ci/playwright is not installed; skipping Argos reporter.'
-  );
+// Only enable Argos in CI on Linux with a token (avoids sharp on macOS dev)
+if (
+  process.env.CI === '1' &&
+  process.platform === 'linux' &&
+  process.env.ARGOS_TOKEN
+) {
+  reporters.push(['@argos-ci/playwright/reporter', {
+    uploadToArgos: true,
+    // project & build options if you use them:
+    // project: process.env.GITHUB_REPOSITORY ?? 'my-project',
+    // branch: process.env.GITHUB_REF_NAME,
+    // commit: process.env.GITHUB_SHA,
+  }]);
 }
 
-export default defineConfig<TestOptions>({
-  testDir: path.join(__dirname, 'tests'),
-  outputDir: path.join(__dirname, 'test-results'),
-
-  reporter: reporters,
-
-  fullyParallel: false,
+export default defineConfig({
+  testDir: './tests',
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-
+  retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  reporter: reporters,
   use: {
-    globalsQaURL: 'https://www.globalsqa.com/demo-site/draganddrop/',
-    baseURL: BASE_URL,
-    headless: !!process.env.CI,
-    viewport: { width: 1280, height: 720 },
+    baseURL: process.env.BASE_URL ?? 'http://localhost:4200',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    navigationTimeout: 6000,
   },
-
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    {
-      name: 'pageObjectFullScreen',
-      testMatch: 'usePageObjects.spec.ts',
-      use: { viewport: { width: 1920, height: 1080 } },
-    },
-    // You can enable Firefox/Safari if needed:
     // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
-
-  webServer: {
-    command: 'npm run start -- --host 0.0.0.0',
-    url: 'http://localhost:4200/',
-    timeout: 120_000,
-    reuseExistingServer: !process.env.CI,
-  },
+  // webServer: { command: 'npm run ng:start', port: 4200, reuseExistingServer: true },
 });
