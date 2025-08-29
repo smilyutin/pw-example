@@ -87,11 +87,11 @@ jobs:
           name: dist
           path: dist
 
-      # ▶ Serve the built Angular app on port 4200 and wait for it
-      - name: Start web server
-        run: |
-          npx -y http-server dist -p 4200 -s -c-1 &
-          npx -y wait-on http://localhost:4200
+      # # ▶ Serve the built Angular app on port 4200 and wait for it
+      # - name: Start web server
+      #   run: |
+      #     npx -y http-server dist -p 4200 -s -c-1 &
+      #     npx -y wait-on http://localhost:4200
 
       # Install Argos ONLY if a token exists, without touching lockfile
       - name: Install Argos (CI only, lenient)
