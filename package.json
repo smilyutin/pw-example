@@ -7,11 +7,14 @@
     "url": "git+https://github.com/bondar-artem/pw-practice-app.git"
   },
   "scripts": {
+    "test": "npx playwright test",
+    "pw:doctor": "node pw-doc.js",
+    "pom:doctor": "node pom-doc.js",
     "ng": "ng",
     "start": "ng serve",
     "pageObjectsArgos-chrome": "npx playwright test usePageObjectsArgos.spec.ts --project=chromium",
     "uiComponents-chrome": "npx playwright test uiComponents.spec.ts --project=chromium",
-    "pageObjects-firefox": "npx playwright test usePageObjects.spec.ts --project=firefox",
+    "pageObjects-chrome": "npx playwright test usePageObjects.spec.ts --project=chromium",
     "pageObjects-all": "npm run pageObjects-chrome && npm run pageObjects-firefox",
     "autoWait-dev": "URL=http://uitestingplayground.com/ajax npx playwright test autoWaiting.spec.ts --project=chromium"
   },
@@ -60,7 +63,9 @@
   "overrides": {
     "@angular-devkit/build-angular": {
       "@babel/runtime": "7.28.2",
-      "@babel/plugin-transform-runtime": "7.28.0"
+      "@babel/plugin-transform-runtime": "7.28.0",
+      "@playwright/test": "1.55.0",
+      "playwright": "1.55.0"
     }
   },
   "devDependencies": {
