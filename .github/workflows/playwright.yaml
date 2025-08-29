@@ -1,72 +1,65 @@
-
 name: Playwright Tests
 
 on:
   push:
-    branches: [main, master]
+    branches: ["**"]          # run on any branch
   pull_request:
-    branches: [main, master]
-  workflow_dispatch:
+    branches: ["**"]
+  workflow_dispatch:          # allow manual runs
+
+permissions:
+  contents: read
+
+# Avoid overlapping runs on the same branch
+concurrency:
+  group: playwright-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  # Optional: build Angular app on Node 16 (if your tests depend on a build)
+  build-angular:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    env:
-      CI: true
-      BASE_URL: https://www.demoblaze.com 
-      # ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Use Node 20.x
-        uses: actions/setup-node@v4
+      # Use Node 16 for Angular 14 CLI
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          # remove "cache: npm" to avoid errors when no lockfile is committed
+          node-version: '16'
+          cache: 'npm'
 
-      # Install deps: prefer `ci` if lockfile exists, otherwise `install`
-      - name: Install dependencies (npm ci)
-        if: ${{ hashFiles('**/package-lock.json') != '' }}
-        run: npm ci --no-audit --no-fund
+      - run: npm ci
+      - run: npx ng version    # quick sanity
+      # If you need a production build artifact:
+      # - run: npx ng build --configuration production
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     name: dist
+      #     path: dist/**
 
-      - name: Install dependencies (npm install)
-        if: ${{ hashFiles('**/package-lock.json') == '' }}
-        run: npm install --no-audit --no-fund
+  tests:
+    runs-on: ubuntu-latest
+    needs: [build-angular]     # drop this line if you don't need the build step
+    steps:
+      - uses: actions/checkout@v4
 
-      # Optional: cache Playwright browsers for speed
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
+      # Use Node 20 for Playwright tests
+      - uses: actions/setup-node@v4
         with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-ms-playwright-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-ms-playwright-
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      - run: npm ci
 
-      # Run a specific script or the whole suite
-      # - name: Run Playwright tests (script)
-      #   run: npm run auth-sign-login-chrome
+      # Install Playwright browsers (cached by the action)
+      - uses: microsoft/playwright-github-action@v1
 
-      - name: Run Playwright tests (chromium)
-        run: npx playwright test --project=chromium
+      # Run tests (adjust config/project flags as needed)
+      - run: npx playwright test --reporter=line
 
-      - name: Upload Playwright report
-        if: ${{ always() }}
+      # Upload HTML report on failure
+      - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
-          retention-days: 30
-
-      - name: Upload test results
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test-results/
-          retention-days: 30
+          path: playwright-report

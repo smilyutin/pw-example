@@ -3,3 +3,5 @@
 This is modified and more lightweight version of original application to practice UI Automation with Playwright.
 
 The original repo is here: https://github.com/akveo/ngx-admin
+
+npm_config_script_shell=/bin/bash npm run ng:start
