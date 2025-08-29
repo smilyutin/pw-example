@@ -50,7 +50,7 @@
               "echarts",
               "lodash",
               "zrender/lib/svg/svg",
-              "zrender/lib/vml/vml", 
+              "zrender/lib/vml/vml",
               "eva-icons"
             ],
             "vendorChunk": true,
@@ -135,6 +135,15 @@
                 "input": "node_modules/leaflet/dist/images",
                 "output": "/assets/img/markers"
               }
+            ]
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
             ]
           }
         }
