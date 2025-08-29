@@ -3,20 +3,33 @@ import * as path from 'path';
 import type { TestOptions } from './test-options';
 import 'dotenv/config';
 
+// Helper: check if a module is installed before requiring it
+function hasModule(name: string): boolean {
+  try {
+    require.resolve(name);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const BASE_URL =
   process.env.BASE_URL ??
-  (process.env.DEV === '1' ? 'http://localhost:4200'
-  : process.env.STAGING === '1' ? 'http://localhost:4200'
-  : 'http://localhost:4200');
+  (process.env.DEV === '1'
+    ? 'http://localhost:4200'
+    : process.env.STAGING === '1'
+    ? 'http://localhost:4200'
+    : 'http://localhost:4200');
 
-// Build reporters array once; add Argos only if token exists.
+// Base reporters (always available)
 const reporters: any[] = [
   process.env.CI ? ['dot'] : ['list'],
   ['html', { outputFolder: path.join(__dirname, 'playwright-report'), open: 'never' }],
   ['github'],
 ];
 
-if (process.env.ARGOS_TOKEN) {
+// Add Argos reporter only if ARGOS_TOKEN is set and package is installed
+if (process.env.ARGOS_TOKEN && hasModule('@argos-ci/playwright/reporter')) {
   reporters.push([
     '@argos-ci/playwright/reporter',
     {
@@ -24,13 +37,16 @@ if (process.env.ARGOS_TOKEN) {
       token: process.env.ARGOS_TOKEN,
     },
   ]);
+} else if (process.env.ARGOS_TOKEN) {
+  console.warn(
+    '[playwright] ARGOS_TOKEN is set but @argos-ci/playwright is not installed; skipping Argos reporter.'
+  );
 }
 
 export default defineConfig<TestOptions>({
   testDir: path.join(__dirname, 'tests'),
   outputDir: path.join(__dirname, 'test-results'),
 
-  // one reporter property only
   reporter: reporters,
 
   fullyParallel: false,
@@ -55,7 +71,7 @@ export default defineConfig<TestOptions>({
       testMatch: 'usePageObjects.spec.ts',
       use: { viewport: { width: 1920, height: 1080 } },
     },
-    // Enable later if needed:
+    // You can enable Firefox/Safari if needed:
     // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     // { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
