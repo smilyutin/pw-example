@@ -7,11 +7,10 @@
     "url": "git+https://github.com/bondar-artem/pw-practice-app.git"
   },
   "scripts": {
-    "test": "npx playwright test",
     "pw:doctor": "node pw-doc.js",
     "pom:doctor": "node pom-doc.js",
-    "ng": "ng",
-    "start": "ng serve",
+    "ng:start": "bash -lc 'export NVM_DIR=\"$HOME/.nvm\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\" || [ -s \"/opt/homebrew/opt/nvm/nvm.sh\" ] && . \"/opt/homebrew/opt/nvm/nvm.sh\"; nvm use 16; ng serve'",
+    "pw:test": "bash -lc 'export NVM_DIR=\"$HOME/.nvm\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\" || [ -s \"/opt/homebrew/opt/nvm/nvm.sh\" ] && . \"/opt/homebrew/opt/nvm/nvm.sh\"; nvm use 20; npx playwright test'",
     "pageObjectsArgos-chrome": "npx playwright test usePageObjectsArgos.spec.ts --project=chromium",
     "uiComponents-chrome": "npx playwright test uiComponents.spec.ts --project=chromium",
     "pageObjects-chrome": "npx playwright test usePageObjects.spec.ts --project=chromium",
@@ -70,6 +69,11 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^14.2.11",
+    "@angular-eslint/builder": "^14.4.0",
+    "@angular-eslint/eslint-plugin": "^14.4.0",
+    "@angular-eslint/eslint-plugin-template": "^14.4.0",
+    "@angular-eslint/schematics": "^14.4.0",
+    "@angular-eslint/template-parser": "^14.4.0",
     "@angular/cli": "^14.2.11",
     "@angular/compiler-cli": "^14.2.12",
     "@angular/language-service": "14.2.12",
@@ -85,6 +89,7 @@
     "codelyzer": "^0.0.28",
     "conventional-changelog-cli": "^2.2.2",
     "dotenv": "^17.2.1",
+    "eslint": "^8.57.1",
     "npm-run-all": "4.0.2",
     "rimraf": "2.6.1",
     "stylelint": "^15.6.0",
