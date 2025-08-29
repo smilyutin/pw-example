@@ -19,57 +19,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Angular 14 prefers Node 16
       - uses: actions/setup-node@v4
         with:
           node-version: '16'
           cache: 'npm'
-      - name: Prepare Node16-friendly overrides (no repo changes)
+
+      # If your repo has a Node16-compatible lockfile, keep ci; otherwise fall back to install.
+      - name: Install Angular deps
+        shell: bash
         run: |
-          node -e "const fs=require('fs');const p=require('./package.json');
-          p.overrides = Object.assign({}, p.overrides, {
-            '@angular-devkit/core': '14.2.13',
-            '@angular-devkit/schematics': '14.2.13',
-            '@angular-devkit/build-angular': '14.2.13',
-            'glob': '7.2.3',
-            'minimatch': '3.1.2',
-            '@babel/runtime': '7.28.2',
-            '@babel/plugin-transform-runtime': '7.28.0'
-          });
-          fs.writeFileSync('package.json', JSON.stringify(p,null,2));"
-      - name: Install deps (skip ci, use legacy peer)
-        run: |
-          npm install --legacy-peer-deps --no-audit --no-fund
+          set -e
+          if npm ci --legacy-peer-deps --no-audit --no-fund; then
+            echo "✔ npm ci succeeded"
+          else
+            echo "⚠ npm ci failed, falling back to npm install"
+            npm install --legacy-peer-deps --no-audit --no-fund
+          fi
       - run: npx ng version
 
   tests:
     runs-on: ubuntu-latest
     needs: [build-angular]
-    env:
-      # keep installs lenient just for CI:
-      NPM_CONFIG_LEGACY_PEER_DEPS: "true"
-      NPM_CONFIG_ENGINE_STRICT: "false"
-      NPM_CONFIG_AUDIT: "false"
-      NPM_CONFIG_FUND: "false"
     steps:
       - uses: actions/checkout@v4
 
+      # Playwright needs Node >=18; you want Node 20
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # Strip legacy lint deps & overrides ONLY in CI to avoid peer-dep conflicts
-      - name: Trim legacy deps for tests
-        run: |
-          node -e "const fs=require('fs');const p=require('./package.json');let changed=false;
-          if(p.overrides){ delete p.overrides; changed=true; }
-          if(p.devDependencies){
-            ['codelyzer','tslint','tslint-language-service'].forEach(k=>{ if(p.devDependencies[k]){ delete p.devDependencies[k]; changed=true; }});
-          }
-          if(changed){ fs.writeFileSync('package.json', JSON.stringify(p,null,2)); console.log('Stripped overrides/codelyzer/tslint for CI'); } else { console.log('Nothing to strip'); }"
-
-      # Prefer ci, but fall back to install if lockfile was regenerated
-      - name: Install deps (lenient)
+      # Install repo deps (TS/linters/etc.). Use legacy peers to dodge old Angular peer chains.
+      - name: Install test deps
+        shell: bash
+        env:
+          NPM_CONFIG_AUDIT: "false"
+          NPM_CONFIG_FUND: "false"
         run: |
           set -e
           if npm ci --legacy-peer-deps --no-audit --no-fund; then
@@ -79,13 +66,15 @@ jobs:
             npm install --legacy-peer-deps --no-audit --no-fund
           fi
 
-      # Playwright browsers
-      - uses: microsoft/playwright-github-action@v1
+      # ✅ Replace deprecated action with official CLI
+      - name: Install Playwright browsers + system deps
+        run: npx playwright install --with-deps
 
-      # Run tests
-      - run: npx playwright test --reporter=line
+      # Run tests (adjust flags as you like)
+      - name: Playwright tests
+        run: npx playwright test --reporter=line
 
-      # Upload HTML report on failure
+      # Upload HTML report if tests fail
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
