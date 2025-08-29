@@ -1,6 +1,7 @@
 import {test, expect} from '@playwright/test'
 import { tooltip } from 'leaflet'
 import { using } from 'rxjs'
+import { argosScreenshot } from "@argos-ci/playwright";
 
 test.describe.configure({mode: 'parallel'})
 
