@@ -16,21 +16,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Optional: build Angular app on Node 16 (if your tests depend on a build)
+  # Build Angular app on Node 16 (Angular 14 CLI prefers Node 16)
   build-angular:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Use Node 16 for Angular 14 CLI
       - uses: actions/setup-node@v4
         with:
           node-version: '16'
           cache: 'npm'
 
-      - run: npm ci
-      - run: npx ng version    # quick sanity
-      # If you need a production build artifact:
+      # Tolerate legacy/incorrect peers to unblock CI
+      - run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - run: npx ng version
+
+      # If you need a production build artifact, uncomment below:
       # - run: npx ng build --configuration production
       # - uses: actions/upload-artifact@v4
       #   with:
@@ -39,7 +40,7 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
-    needs: [build-angular]     # drop this line if you don't need the build step
+    needs: [build-angular]     # drop if the build step isn't required
     steps:
       - uses: actions/checkout@v4
 
@@ -49,12 +50,16 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - run: npm ci
+      # Same tolerant install flags here too
+      - run: npm ci --legacy-peer-deps --no-audit --no-fund
 
-      # Install Playwright browsers (cached by the action)
+      # Install Playwright browsers
       - uses: microsoft/playwright-github-action@v1
 
-      # Run tests (adjust config/project flags as needed)
+      # Optional: sanity check single @playwright/test version
+      - run: npm ls @playwright/test --all || true
+
+      # Run tests (tweak reporter / projects as you like)
       - run: npx playwright test --reporter=line
 
       # Upload HTML report on failure
