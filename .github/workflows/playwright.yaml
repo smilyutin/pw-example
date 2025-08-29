@@ -16,92 +16,62 @@ concurrency:
 
 jobs:
   build-angular:
-    name: Build Angular (Node 16)
     runs-on: ubuntu-latest
-    env:
-      # Angular 14 + some old libs need this to avoid peer conflicts in CI
-      NPM_CONFIG_LEGACY_PEER_DEPS: "true"
-      # keep installs quiet & faster
-      NPM_CONFIG_AUDIT: "false"
-      NPM_CONFIG_FUND: "false"
     steps:
       - uses: actions/checkout@v4
-
-      - name: Use Node 16.x
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "16"
-          cache: "npm"
-
-      - name: Cache Angular CLI builder cache
-        uses: actions/cache@v4
-        with:
-          path: .angular/cache
-          key: angular-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            angular-cache-${{ runner.os }}-
-
-      - name: Install deps (prefer ci, fall back to install)
-        run: |
-          set -e
-          if npm ci --no-audit --no-fund; then
-            echo "✔ npm ci succeeded"
-          else
-            echo "⚠ npm ci failed, falling back to npm install"
-            npm install --no-audit --no-fund
-          fi
-
-      - name: Print versions
-        run: |
-          node -v
-          npm -v
-          npx ng version
-
-      # Build is optional – uncomment if your e2e uses dist/
-      # - name: Build (prod)
-      #   run: npx ng build --configuration production
-
-      # - name: Upload dist
-      #   if: success()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: dist
-      #     path: dist/**
+          node-version: '16'
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - run: npx ng version
 
   tests:
-    name: Playwright (Node 20)
     runs-on: ubuntu-latest
     needs: [build-angular]
     env:
+      # keep installs lenient just for CI:
+      NPM_CONFIG_LEGACY_PEER_DEPS: "true"
+      NPM_CONFIG_ENGINE_STRICT: "false"
       NPM_CONFIG_AUDIT: "false"
       NPM_CONFIG_FUND: "false"
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node 20.x
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Install deps (pure test env)
+      # Strip legacy lint deps & overrides ONLY in CI to avoid peer-dep conflicts
+      - name: Trim legacy deps for tests
+        run: |
+          node -e "const fs=require('fs');const p=require('./package.json');let changed=false;
+          if(p.overrides){ delete p.overrides; changed=true; }
+          if(p.devDependencies){
+            ['codelyzer','tslint','tslint-language-service'].forEach(k=>{ if(p.devDependencies[k]){ delete p.devDependencies[k]; changed=true; }});
+          }
+          if(changed){ fs.writeFileSync('package.json', JSON.stringify(p,null,2)); console.log('Stripped overrides/codelyzer/tslint for CI'); } else { console.log('Nothing to strip'); }"
+
+      # Prefer ci, but fall back to install if lockfile was regenerated
+      - name: Install deps (lenient)
         run: |
           set -e
-          if npm ci --no-audit --no-fund; then
+          if npm ci --legacy-peer-deps --no-audit --no-fund; then
             echo "✔ npm ci succeeded"
           else
             echo "⚠ npm ci failed, falling back to npm install"
-            npm install --no-audit --no-fund
+            npm install --legacy-peer-deps --no-audit --no-fund
           fi
 
-      - name: Install Playwright browsers
-        uses: microsoft/playwright-github-action@v1
+      # Playwright browsers
+      - uses: microsoft/playwright-github-action@v1
 
-      - name: Run Playwright tests
-        run: npx playwright test --reporter=line
+      # Run tests
+      - run: npx playwright test --reporter=line
 
-      - name: Upload Playwright HTML report (on fail)
-        if: failure()
+      # Upload HTML report on failure
+      - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
