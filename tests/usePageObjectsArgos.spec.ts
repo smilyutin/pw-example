@@ -1,7 +1,8 @@
 // tests/usePageObjectsArgos.spec.ts
 import { test } from '@playwright/test';
 import { PageManager } from '../page-objects/pageManager';
-import { argosScreenshot as argosSnap } from './utils/argos'; // ✅ single source of truth
+import { argosSnap } from './utils/argos';
+//import { argosScreenshot as argosSnap } from './utils/argos'; // ✅ single source of truth
 
 // Start the Angular app before each test
 test.beforeEach(async ({ page }) => {

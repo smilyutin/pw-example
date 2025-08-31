@@ -25,3 +25,12 @@ export async function argosScreenshot(page: Page, name: string) {
     throw e; // fail the test so we see it in CI logs
   }
 }
+export async function argosSnap(page: any, name: string) {
+  if (!process.env.ARGOS_TOKEN) return; // skip when no token
+  try {
+    const { argosScreenshot } = require('@argos-ci/playwright');
+    await argosScreenshot(page, name);
+  } catch (e) {
+    console.log('Argos not available:', (e as Error)?.message);
+  }
+}
