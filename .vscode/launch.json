@@ -2,6 +2,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Playwright Debug",
+            "request": "launch",
+            "type": "node",
+            "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+            "args": ["test", "--headed", "--project=chromium"],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
@@ -16,6 +25,7 @@
             "port": 9222,
             "sourceMaps": true,
             "webRoot": "${workspaceRoot}"
-        }
+        },
+        
     ]
 }

@@ -17,7 +17,9 @@ export class PageManager {
     this.formLayoutsPage = new FormLayoutPage(page);            // Instantiate Form Layout
     this.datepickerPage = new DatepickerPage(page);             // Instantiate Datepicker
   }
-
+  public getPage(): Page {
+  return this.page;
+}
   // Return the navigation object to drive clicking through menus
   navigateTo() {
     return this.navigationPage;

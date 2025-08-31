@@ -1,76 +1,82 @@
 // tests/usePageObjects.spec.ts
-import { test, expect } from '@playwright/test';                // Playwright test runner APIs
-import { PageManager } from '../page-objects/pageManager';         // Centralized page manager
-import { faker} from '@faker-js/faker'
-import { argosScreenshot } from "./utils/argos";
+import { expect } from '@playwright/test';
+import { test } from '../test-options';
+import { faker } from '@faker-js/faker';
+import { argosScreenshot } from './utils/argos';
+import * as fs from 'fs';
 
-// Start the Angular app before each test
-test.beforeEach(async ({ page }) => {
-  await page.goto('http://localhost:4200/');                      // Navigate to the app root
+const ensureScreenshotsDir = () => {
+  try { fs.mkdirSync('screenshots', { recursive: true }); } catch {}
+};
+
+test('navigate to form page', async ({ pageManager }) => {
+  test.slow();
+
+  await pageManager.navigateTo().formLayoutsPage();
+  await pageManager.navigateTo().datepickerPage();
+  await pageManager.navigateTo().smartTablePage();
+  await pageManager.navigateTo().toastrPage();
+  await pageManager.navigateTo().tooltipPage();
+
+  // Optional extra proof Tooltip is reachable — uses the public helper
+  await pageManager.navigateTo().assertTooltipLinkVisible();
+
+  // If you still want a direct sidebar check, keep it scoped + anchor-only:
+  const page = pageManager.getPage();
+  const sidebar = page.locator('nb-sidebar, aside').first();
+  const tooltipLink = sidebar
+    .locator('a[title="Tooltip"]').first()
+    .or(sidebar.getByRole('link', { name: /^Tooltip$/i }).first())
+    .locator('xpath=self::a');
+  await tooltipLink.waitFor({ state: 'visible', timeout: 10_000 });
+
+  // And verify a Tooltip card really rendered:
+  const column = page.locator('nb-layout-column').first();
+  await column
+    .locator('nb-card-header', { hasText: /Tooltip (With Icon|Placements|Colored)/i })
+    .first()
+    .waitFor({ state: 'visible', timeout: 10_000 });
 });
 
-// Test: navigate through all pages via PageManager
-test('navigate to form page', async ({ page }) => {
-  test.slow();                                                   // Mark this test as slow for extra timeout
-  const pm = new PageManager(page);                              // Instantiate manager with the Playwright page
+test('parametrized methods', async ({ pageManager, page }) => {
+  test.slow();
 
-  // Use the navigation page under the manager to visit each section
-  await pm.navigateTo().formLayoutsPage();                       // Click "Form Layouts"
-  await pm.navigateTo().datepickerPage();                        // Click "Datepicker"
-  await pm.navigateTo().smartTablePage();                        // Click "Smart Table"
-  await pm.navigateTo().toastrPage();                           // Click "Toastr"
-  await pm.navigateTo().tooltipPage();                          // Click "Tooltip"
+  const email = (process.env.USERNAME ?? 'qa@example.com').trim();
+  const password = (process.env.PASSWORD ?? 'Secret123!').trim();
+
+  const randomFullName = faker.person.fullName();
+  const randomEmail = `${randomFullName.replace(/\s+/g, '')}${faker.number.int({ min: 1, max: 9999 })}@test.com`
+    .toLowerCase();
+
+  await pageManager
+    .onFormLayoutsPage()
+    .submitUsingTheGridFormWithCredentialsAndSelectOption(email, password, 'Option 1');
+
+  await pageManager
+    .onFormLayoutsPage()
+    .submitInLineFormWithNameEmailAndCheckbox(randomFullName, randomEmail, true);
+
+  ensureScreenshotsDir();
+  await page.screenshot({ path: 'screenshots/formLayoutsPage.png', fullPage: true });
+  await page.locator('nb-card', { hasText: /Inline form/i }).screenshot({ path: 'screenshots/inlineForm.png' });
+
+  await argosScreenshot(page, 'Form Layouts - after submit');
+
+  await expect(
+    page.locator('nb-card', { hasText: /Using the Grid/i }).getByRole('button')
+  ).toBeVisible();
 });
 
-// Test: interact with forms and datepicker using parametrized inputs
-test('parametrized methods', async ({ page }) => {
-  test.slow();                                                   // Slow mode for stability
-  const pm = new PageManager(page);                              // Reuse PageManager for pages
-  const randomFullName = faker.person.fullName()
-  const randomEmail = `${randomFullName.replace(' ','')}${faker.number.int(1000)}@test.com`
-  // Form Layout interactions
-  await pm.navigateTo().formLayoutsPage();                       // Go to form page
-  await pm.onFormLayoutsPage()
-    .submitUsingTheGridFormWithCredentialsAndSelectOption(
-      process.env.USERNAME,                                            // email value
-      process.env.PASSWORD,                                                 // password value
-      'Option 1'                                                 // dropdown selection
-    );
-    await page.screenshot({path: 'screenshots/formLayoutsPage.png'})
-    const buffer = await page.screenshot()
-    console.log(buffer.toString('base64'))
+test('testing with agros ci', async ({ pageManager, page }) => {
+  test.slow();
 
-  await pm.onFormLayoutsPage()
-    .submitInLineFormWithNameEmailAndCheckbox(
-      randomFullName,                                           // name input
-      randomEmail,                                        // email input
-      true  );                                                // checkbox toggle
-    
-await page.locator('nb-card', {hasText: "inline form"}).screenshot({path: 'screenshots/inlineForm.png'})  
-  // Datepicker interactions
-  // await pm.navigateTo().datepickerPage();                        // Open datepicker
-  // await pm.onDatepickerPage().selectCommonDatePickerDateFromToday(2);  // Select date 2 days ahead
-  // await pm.onDatepickerPage().selectDatepickerWithRangeFromToday(0, 2);  // Select range today to +2 days
-});
+  await pageManager.navigateTo().formLayoutsPage();
 
+  // ✅ Robust page check (URL + known headers)
+  await pageManager.navigateTo().assertFormLayoutsVisible();
 
-test('testing with agros ci', async ({ page }) => {
-  test.slow();                                                   // Mark this test as slow for extra timeout
-  const pm = new PageManager(page);                              // Instantiate manager with the Playwright page
-let argosScreenshot: undefined | ((...args: any[]) => Promise<any>);
-try {
-  // Only resolves if @argos-ci/playwright is installed (CI or local if you installed it)
-  ({ argosScreenshot } = require('@argos-ci/playwright'));
-} catch (_) {}
+  // (If you prefer a direct assertion, use real card headers)
+  // await expect(page.locator('nb-card-header', { hasText: /(Using the Grid|Inline form|Form without labels|Basic form)/i }).first()).toBeVisible();
 
-if (argosScreenshot && process.env.ARGOS_TOKEN) {
-  await argosScreenshot(page, 'some-name');
-}
-  // Use the navigation page under the manager to visit each section
-  await pm.navigateTo().formLayoutsPage();  
-  await argosScreenshot(page, "forms layout page");                     // Click "Form Layouts"
-  //await pm.navigateTo().datepickerPage();                        // Click "Datepicker"
-  // await pm.navigateTo().smartTablePage();                        // Click "Smart Table"
-  // await pm.navigateTo().toastrPage();                           // Click "Toastr"
-  // await pm.navigateTo().tooltipPage();                          // Click "Tooltip"
+  await argosScreenshot(page, 'Form Layouts - smoke');
 });

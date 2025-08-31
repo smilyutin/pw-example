@@ -1,19 +1,33 @@
-import {expect} from '@playwright/test'
-import {test} from '../test-options'
+// tests/dragAndDropWithiFrame.spec.ts
+import { expect } from '@playwright/test';
+import { test } from '../test-options';
 
+test('drag and drop with iframe', async ({ page, globalsQaURL }) => {
+  // Prefer fixture value, then env, then relative (uses baseURL from config)
+  const targetUrl = globalsQaURL || process.env.QA_URL || '/';
+  await page.goto(targetUrl);
+  await page.waitForLoadState('networkidle');
 
-test(`drag and drop with iframe`, async({page, globalsQaURL}) => {
-    await page.goto(globalsQaURL)
+  const frame = page.frameLocator('[rel-title="Photo Manager"] iframe');
 
-    const frame = page.frameLocator(`[rel-title="Photo Manager"] iframe`)
+  // Ensure iframe contents are ready
+  await frame.locator('body').first().waitFor();
 
-    await frame.locator(`li`, {hasText:"High Tatras 2"}).dragTo(frame.locator(`#trash`))
+  // Drag item 1 via dragTo API
+  const item2 = frame.locator('li', { hasText: 'High Tatras 2' });
+  const trash = frame.locator('#trash');
+  await item2.waitFor();
+  await trash.waitFor();
+  await item2.dragTo(trash);
 
-    //more control
-    await frame.locator(`li`, {hasText:"High Tatras 4"}).hover()
-    await page.mouse.down()
-    await frame.locator(`#trash`).hover()
-    await page.mouse.up()
+  // Drag item 2 using hover + mouse API to demonstrate alternative approach
+  const item4 = frame.locator('li', { hasText: 'High Tatras 4' });
+  await item4.waitFor();
+  await item4.hover();
+  await page.mouse.down();
+  await trash.hover();
+  await page.mouse.up();
 
-    await expect(frame.locator(`#trash li h5`)).toHaveText(["High Tatras 2", "High Tatras 4"])
-})
+  // Verify both images are in trash
+  await expect(frame.locator('#trash li h5')).toHaveText(['High Tatras 2', 'High Tatras 4']);
+});
