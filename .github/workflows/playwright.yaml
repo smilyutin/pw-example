@@ -52,6 +52,7 @@ jobs:
       NPM_CONFIG_FUND: "false"
       PW_FORBID_ONLY: "1"
       ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN || '' }}
+      QA_EXTERNAL_URL: 'https://www.globalsqa.com/demo-site/draganddrop/#Photo%20Manager'
       QA_URL: http://localhost:4200
       # (Optional) help Argos pick comparisons:
       ARGOS_BRANCH: ${{ github.ref_name }}
