@@ -1,42 +1,47 @@
-// tests/usePageObjects.spec.ts
-import { test } from '../test-options';         // ✅ Import the extended test with fixtures
-import { faker } from '@faker-js/faker';        // ✅ Faker for generating random data
+// tests/testWithFixtures.spec.ts
+import { test } from '../test-options';         // ✅ Extended Playwright test with fixtures
+import { faker } from '@faker-js/faker';
 
 /**
- * Test: interact with forms and datepicker using parameterized inputs
- * - Uses the `pageManager` fixture, which is initialized in test-options.ts
- * - Automatically navigates to the Form Layouts page (via formLayoutPage fixture)
- * - Demonstrates:
- *    1. Submitting the grid form with credentials and a dropdown selection
- *    2. Submitting the inline form with random name/email + checkbox
+ * Demo spec using the custom fixtures from test-options.ts
+ * - Relies on:
+ *   1. `formLayoutPage` fixture → automatically navigates to Form Layouts
+ *   2. `pageManager` fixture → provides ready-to-use PageManager
  */
-test('parametrized methods', async ({ pageManager }) => {
-  // Generate dynamic test data using Faker
-  const randomFullName = faker.person.fullName();
-  const randomEmail = `${randomFullName.replace(' ', '')}${faker.number.int(1000)}@test.com`;
+test.describe('Fixtures demo', () => {
+  test('parametrized methods', async ({ pageManager }) => {
+    // 🔐 Use env creds safely with defaults
+    const email = (process.env.USERNAME ?? 'qa@example.com').trim();
+    const password = (process.env.PASSWORD ?? 'Secret123!').trim();
 
-  /**
-   * 1️⃣ Submit the Grid Form using credentials from environment variables
-   * - Pulls email/password from .env (via process.env)
-   * - Selects "Option 1" in the dropdown
-   */
-  await pageManager.onFormLayoutsPage()
-    .submitUsingTheGridFormWithCredentialsAndSelectOption(
-      process.env.USERNAME,     // email value from .env
-      process.env.PASSWORD,     // password value from .env
-      'Option 1'                // dropdown selection
-    );
+    // 🎲 Fake user for inline form
+    const randomFullName = faker.person.fullName();
+    const randomEmail =
+      `${randomFullName.replace(/\s+/g, '')}${faker.number.int({ min: 1, max: 9999 })}@test.com`
+        .toLowerCase();
 
-  /**
-   * 2️⃣ Submit the Inline Form using randomized test data
-   * - Helps ensure tests are more robust against caching or duplicates
-   */
-  await pageManager.onFormLayoutsPage()
-    .submitInLineFormWithNameEmailAndCheckbox(
-      randomFullName,           // name input
-      randomEmail,              // email input
-      true                      // checkbox toggle
-    );
+    // 1️⃣ Submit Grid form (uses env creds or defaults)
+    await test.step('Submit Grid form with env creds', async () => {
+      await pageManager
+        .onFormLayoutsPage()
+        .submitUsingTheGridFormWithCredentialsAndSelectOption(
+          email,
+          password,
+          'Option 1',
+        );
+    });
 
-  console.log(`✅ Submitted forms with ${randomFullName} / ${randomEmail}`);
+    // 2️⃣ Submit Inline form (randomized data)
+    await test.step('Submit Inline form with random data', async () => {
+      await pageManager
+        .onFormLayoutsPage()
+        .submitInLineFormWithNameEmailAndCheckbox(
+          randomFullName,
+          randomEmail,
+          true,
+        );
+    });
+
+    console.log(`✅ Fixtures demo submitted with ${email}/${password} and ${randomFullName}/${randomEmail}`);
+  });
 });
