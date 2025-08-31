@@ -97,7 +97,6 @@ jobs:
           name: dist
           path: dist
 
-      # Quick Argos env sanity (doesn't print the token)
       - name: Argos env summary
         run: |
           echo "ARGOS token set?: $([ -n \"$ARGOS_TOKEN\" ] && echo yes || echo no)"
@@ -127,14 +126,14 @@ jobs:
         if: ${{ env.ARGOS_TOKEN == '' || steps.argos_install.outcome != 'success' }}
         run: npx playwright test --reporter=line
 
-      # Always show what the reporter produced (if anything)
-      - name: Argos debug: list snapshots
+      # Quote names with colons to keep YAML happy
+      - name: "Argos debug: list snapshots"
         if: always()
         run: |
           echo "Contents of ./.argos-screenshots (if any):"
           ls -la .argos-screenshots || echo "(no directory)"
 
-      - name: Upload Argos debug artifact
+      - name: "Upload Argos debug artifact"
         if: always()
         uses: actions/upload-artifact@v4
         with:
