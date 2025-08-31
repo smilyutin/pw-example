@@ -26,7 +26,6 @@ jobs:
           cache: 'npm'
 
       - name: Install Angular deps
-        shell: bash
         run: |
           set -e
           if npm ci --legacy-peer-deps --no-audit --no-fund; then
@@ -37,7 +36,6 @@ jobs:
           fi
 
       - run: npx ng version
-
       - name: Build Angular (production)
         run: npx ng build --configuration production
 
@@ -49,16 +47,16 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     needs: [build-angular]
+    strategy:
+      matrix:
+        node-version: [16, 20]   # 👈 run tests on both Node 16 and Node 20
     env:
       NPM_CONFIG_AUDIT: "false"
       NPM_CONFIG_FUND: "false"
       PW_FORBID_ONLY: "1"
-
-      # ---- App/Test URLs ----------------------------------------------------
       QA_URL: http://localhost:4200
       QA_EXTERNAL_URL: 'https://www.globalsqa.com/demo-site/draganddrop/#Photo%20Manager'
 
-      # ---- Argos config (safe defaults) ------------------------------------
       ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN || '' }}
       ARGOS_BRANCH: ${{ github.ref_name }}
       ARGOS_BASE_BRANCH: main
@@ -69,11 +67,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Install test deps
-        shell: bash
         run: |
           set -e
           if npm ci --legacy-peer-deps --no-audit --no-fund; then
@@ -94,34 +91,28 @@ jobs:
           name: dist
           path: dist
 
-      # Optional: quick Argos debug (no secrets printed)
       - name: Argos env summary
         run: |
+          echo "Running on Node ${{ matrix.node-version }}"
           echo "ARGOS token set?: $([ -n \"$ARGOS_TOKEN\" ] && echo yes || echo no)"
-          echo "ARGOS_BRANCH=$ARGOS_BRANCH"
-          echo "ARGOS_BASE_BRANCH=$ARGOS_BASE_BRANCH"
-          echo "ARGOS_COMMIT=$ARGOS_COMMIT"
+          echo "ARGOS_BRANCH=$ARGOS_BRANCH  ARGOS_BASE_BRANCH=$ARGOS_BASE_BRANCH  ARGOS_COMMIT=$ARGOS_COMMIT"
 
-      # Install Argos ONLY if a token exists; don't touch lockfile; ignore peer conflicts
       - name: Install Argos (lenient)
         id: argos_install
         if: ${{ env.ARGOS_TOKEN != '' }}
         continue-on-error: true
         run: npm install -D --no-save --legacy-peer-deps --no-audit --no-fund @argos-ci/playwright
 
-      # Run with Argos reporter when available…
       - name: Playwright tests (with Argos)
         if: ${{ env.ARGOS_TOKEN != '' && steps.argos_install.outcome == 'success' }}
         run: npx playwright test -c playwright.argos.config.ts --reporter=line
 
-      # …otherwise fall back to default reporter
       - name: Playwright tests (no Argos)
         if: ${{ env.ARGOS_TOKEN == '' || steps.argos_install.outcome != 'success' }}
         run: npx playwright test --reporter=line
 
-      # Upload HTML report when something fails
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.node-version }}
           path: playwright-report
