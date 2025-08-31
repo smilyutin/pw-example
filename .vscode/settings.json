@@ -1,4 +1,11 @@
 {
     "typescript.tsdk": "./node_modules/typescript/lib",
-    "tslint.enable": false
+    "tslint.enable": false,
+
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": "playwright.yaml"
+  },
+  "yaml.customTags": [
+    "!secret"
+  ]
 }
