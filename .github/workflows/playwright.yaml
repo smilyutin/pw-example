@@ -19,9 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '16'      # Angular build on Node 16
+          node-version: '16'           # Angular build on Node 16
           cache: 'npm'
 
       - name: Install Angular deps
@@ -36,6 +37,7 @@ jobs:
           fi
 
       - run: npx ng version
+
       - name: Build Angular (production)
         run: npx ng build --configuration production
 
@@ -51,10 +53,12 @@ jobs:
       NPM_CONFIG_AUDIT: "false"
       NPM_CONFIG_FUND: "false"
       PW_FORBID_ONLY: "1"
+
+      # ---- App/Test URLs ----------------------------------------------------
       QA_URL: http://localhost:4200
       QA_EXTERNAL_URL: 'https://www.globalsqa.com/demo-site/draganddrop/#Photo%20Manager'
 
-      # Argos env
+      # ---- Argos config -----------------------------------------------------
       ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN || '' }}
       ARGOS_BRANCH: ${{ github.ref_name }}
       ARGOS_BASE_BRANCH: main
@@ -68,7 +72,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'       # Playwright ≥ 18
+          node-version: '20'           # Playwright requires >= 18
           cache: 'npm'
 
       - name: Install test deps
@@ -93,6 +97,7 @@ jobs:
           name: dist
           path: dist
 
+      # Quick Argos env sanity (doesn't print the token)
       - name: Argos env summary
         run: |
           echo "ARGOS token set?: $([ -n \"$ARGOS_TOKEN\" ] && echo yes || echo no)"
@@ -100,6 +105,7 @@ jobs:
           echo "ARGOS_BASE_BRANCH=$ARGOS_BASE_BRANCH"
           echo "ARGOS_COMMIT=$ARGOS_COMMIT"
           echo "ARGOS_CI=$ARGOS_CI"
+          echo "ARGOS_PARALLEL_TOTAL=$ARGOS_PARALLEL_TOTAL ARGOS_PARALLEL_INDEX=$ARGOS_PARALLEL_INDEX"
 
       - name: Install Argos (lenient)
         id: argos_install
@@ -107,10 +113,9 @@ jobs:
         continue-on-error: true
         run: npm install -D --no-save --legacy-peer-deps --no-audit --no-fund @argos-ci/playwright
 
-      # Optional sanity: ensure reporter can be resolved
       - name: Verify Argos reporter is resolvable
         if: ${{ env.ARGOS_TOKEN != '' && steps.argos_install.outcome == 'success' }}
-        run: node -e "require.resolve('@argos-ci/playwright'); console.log('Argos reporter RESOLVED ✅')"
+        run: node -e "console.log(require.resolve('@argos-ci/playwright')); console.log('Argos reporter RESOLVED ✅')"
 
       - name: Playwright tests (with Argos)
         if: ${{ env.ARGOS_TOKEN != '' && steps.argos_install.outcome == 'success' }}
@@ -121,6 +126,21 @@ jobs:
       - name: Playwright tests (no Argos)
         if: ${{ env.ARGOS_TOKEN == '' || steps.argos_install.outcome != 'success' }}
         run: npx playwright test --reporter=line
+
+      # Always show what the reporter produced (if anything)
+      - name: Argos debug: list snapshots
+        if: always()
+        run: |
+          echo "Contents of ./.argos-screenshots (if any):"
+          ls -la .argos-screenshots || echo "(no directory)"
+
+      - name: Upload Argos debug artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: argos-snapshots
+          path: .argos-screenshots/**
+          if-no-files-found: ignore
 
       - if: failure()
         uses: actions/upload-artifact@v4

@@ -1,21 +1,27 @@
+// tests/utils/argos.ts
 import type { Page } from '@playwright/test';
 
-// Try to load Argos at runtime. If not available (local dev), we no-op.
-let impl: null | ((page: Page, name: string, options?: any) => Promise<any>) = null;
+let impl: ((page: Page, name: string) => Promise<unknown>) | null = null;
 try {
+  // Loaded only when installed (CI)
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const mod = require('@argos-ci/playwright');
-  impl = mod && mod.argosScreenshot ? mod.argosScreenshot : null;
-} catch {
-  impl = null;
-}
+  if (mod && typeof mod.argosScreenshot === 'function') impl = mod.argosScreenshot;
+} catch {}
 
-/**
- * Safe wrapper around argosScreenshot.
- * - In CI (Node 20) with @argos-ci/playwright installed, this calls the real thing.
- * - Locally, it becomes a no-op (so no sharp/native deps needed).
- */
-export function argosScreenshot(page: Page, name: string, options?: any): Promise<void> {
-  if (impl) return impl(page, name, options);
-  return Promise.resolve();
+export async function argosScreenshot(page: Page, name: string) {
+  const hasToken = Boolean(process.env.ARGOS_TOKEN);
+  const hasPkg = Boolean(impl);
+  console.log(`[argos] token=${hasToken ? 'present' : 'MISSING'} pkg=${hasPkg ? 'loaded' : 'MISSING'} name="${name}"`);
+
+  if (!hasToken || !hasPkg) return; // safe no-op locally / when package not installed
+
+  try {
+    const result = await impl!(page, name);
+    console.log(`[argos] snapshot taken: ${name}`);
+    return result;
+  } catch (e) {
+    console.error(`[argos] snapshot FAILED: ${name}:`, e);
+    throw e; // fail the test so we see it in CI logs
+  }
 }
