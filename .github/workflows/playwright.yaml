@@ -2,9 +2,9 @@ name: Playwright Tests
 
 on:
   push:
-    branches: ["dev*"]
+    branches: ["dev*"]        # dev, dev_ex, dev123 ...
   pull_request:
-    branches: ["dev*"]
+    branches: ["dev*"]        # PRs whose base branch starts with dev
   workflow_dispatch:
 
 permissions:
@@ -16,15 +16,9 @@ concurrency:
 
 jobs:
   build-angular:
-    # Run for pushes to dev*, PRs targeting dev*, or manual runs
-    if: |
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/dev')) ||
-      (github.event_name == 'pull_request' && startsWith(github.base_ref, 'dev')) ||
-      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '16'
@@ -42,7 +36,6 @@ jobs:
           fi
 
       - run: npx ng version
-
       - name: Build Angular (production)
         run: npx ng build --configuration production
 
@@ -52,10 +45,6 @@ jobs:
           path: dist/**
 
   tests:
-    if: |
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/dev')) ||
-      (github.event_name == 'pull_request' && startsWith(github.base_ref, 'dev')) ||
-      (github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     needs: [build-angular]
     env:
@@ -64,9 +53,11 @@ jobs:
       PW_FORBID_ONLY: "1"
       ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN || '' }}
       QA_URL: http://localhost:4200
+      # (Optional) help Argos pick comparisons:
+      ARGOS_BRANCH: ${{ github.ref_name }}
+      ARGOS_BASE_BRANCH: main
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -98,8 +89,7 @@ jobs:
         id: argos_install
         if: ${{ env.ARGOS_TOKEN != '' }}
         continue-on-error: true
-        run: |
-          npm install -D --no-save --legacy-peer-deps --no-audit --no-fund @argos-ci/playwright
+        run: npm install -D --no-save --legacy-peer-deps --no-audit --no-fund @argos-ci/playwright
 
       - name: Playwright tests (with Argos)
         if: ${{ env.ARGOS_TOKEN != '' && steps.argos_install.outcome == 'success' }}
