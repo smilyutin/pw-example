@@ -1,8 +1,9 @@
 // tests/usePageObjects.spec.ts
 import { expect } from '@playwright/test';
 import { test } from '../test-options';
+import { PageManager } from '../page-objects/pageManager';
 import { faker } from '@faker-js/faker';
-import { argosScreenshot } from './utils/argos';
+import { argosScreenshot as argosSnap } from './utils/argos';
 import * as fs from 'fs';
 
 const ensureScreenshotsDir = () => {
@@ -27,7 +28,7 @@ test('navigate to form page', async ({ pageManager }) => {
   const tooltipLink = sidebar
     .locator('a[title="Tooltip"]').first()
     .or(sidebar.getByRole('link', { name: /^Tooltip$/i }).first())
-    .locator('xpath=self::a');
+    .locator('xpath=self::a'); // ensure single <a>
   await tooltipLink.waitFor({ state: 'visible', timeout: 10_000 });
 
   // And verify a Tooltip card really rendered:
@@ -60,23 +61,24 @@ test('parametrized methods', async ({ pageManager, page }) => {
   await page.screenshot({ path: 'screenshots/formLayoutsPage.png', fullPage: true });
   await page.locator('nb-card', { hasText: /Inline form/i }).screenshot({ path: 'screenshots/inlineForm.png' });
 
-  await argosScreenshot(page, 'Form Layouts - after submit');
+  // Use the aliased helper consistently
+  await argosSnap(page, 'Form Layouts - after submit');
 
   await expect(
     page.locator('nb-card', { hasText: /Using the Grid/i }).getByRole('button')
   ).toBeVisible();
 });
 
-test('testing with agros ci', async ({ pageManager, page }) => {
+test('testing with agros ci', async ({ page }) => {
   test.slow();
 
-  await pageManager.navigateTo().formLayoutsPage();
+  const pm = new PageManager(page);
 
-  // ✅ Robust page check (URL + known headers)
-  await pageManager.navigateTo().assertFormLayoutsVisible();
+  await pm.navigateTo().formLayoutsPage();
+  await argosSnap(page, 'forms layout page');
 
-  // (If you prefer a direct assertion, use real card headers)
-  // await expect(page.locator('nb-card-header', { hasText: /(Using the Grid|Inline form|Form without labels|Basic form)/i }).first()).toBeVisible();
+  await pm.navigateTo().datepickerPage();
+  await argosSnap(page, 'date picker page');
 
-  await argosScreenshot(page, 'Form Layouts - smoke');
+  // add more steps + argosSnap(...) as needed
 });

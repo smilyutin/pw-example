@@ -2,9 +2,9 @@ name: Playwright Tests
 
 on:
   push:
-    branches: ["dev*"]        # dev, dev_ex, dev123 ...
+    branches: ["dev*"]          # runs on dev, dev_ex, dev123, etc.
   pull_request:
-    branches: ["dev*"]        # PRs whose base branch starts with dev
+    branches: ["dev*"]          # PRs whose base branch matches dev*
   workflow_dispatch:
 
 permissions:
@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '16'
@@ -36,6 +37,7 @@ jobs:
           fi
 
       - run: npx ng version
+
       - name: Build Angular (production)
         run: npx ng build --configuration production
 
@@ -51,14 +53,20 @@ jobs:
       NPM_CONFIG_AUDIT: "false"
       NPM_CONFIG_FUND: "false"
       PW_FORBID_ONLY: "1"
-      ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN || '' }}
-      QA_EXTERNAL_URL: 'https://www.globalsqa.com/demo-site/draganddrop/#Photo%20Manager'
+
+      # ---- App/Test URLs ----------------------------------------------------
       QA_URL: http://localhost:4200
-      # (Optional) help Argos pick comparisons:
+      QA_EXTERNAL_URL: 'https://www.globalsqa.com/demo-site/draganddrop/#Photo%20Manager'
+
+      # ---- Argos config (safe defaults) ------------------------------------
+      ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN || '' }}
       ARGOS_BRANCH: ${{ github.ref_name }}
       ARGOS_BASE_BRANCH: main
+      ARGOS_COMMIT: ${{ github.sha }}
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -86,20 +94,32 @@ jobs:
           name: dist
           path: dist
 
-      - name: Install Argos (CI only, lenient)
+      # Optional: quick Argos debug (no secrets printed)
+      - name: Argos env summary
+        run: |
+          echo "ARGOS token set?: $([ -n \"$ARGOS_TOKEN\" ] && echo yes || echo no)"
+          echo "ARGOS_BRANCH=$ARGOS_BRANCH"
+          echo "ARGOS_BASE_BRANCH=$ARGOS_BASE_BRANCH"
+          echo "ARGOS_COMMIT=$ARGOS_COMMIT"
+
+      # Install Argos ONLY if a token exists; don't touch lockfile; ignore peer conflicts
+      - name: Install Argos (lenient)
         id: argos_install
         if: ${{ env.ARGOS_TOKEN != '' }}
         continue-on-error: true
         run: npm install -D --no-save --legacy-peer-deps --no-audit --no-fund @argos-ci/playwright
 
+      # Run with Argos reporter when available…
       - name: Playwright tests (with Argos)
         if: ${{ env.ARGOS_TOKEN != '' && steps.argos_install.outcome == 'success' }}
         run: npx playwright test -c playwright.argos.config.ts --reporter=line
 
+      # …otherwise fall back to default reporter
       - name: Playwright tests (no Argos)
         if: ${{ env.ARGOS_TOKEN == '' || steps.argos_install.outcome != 'success' }}
         run: npx playwright test --reporter=line
 
+      # Upload HTML report when something fails
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
