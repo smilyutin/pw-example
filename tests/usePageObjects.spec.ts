@@ -3,7 +3,9 @@ import { expect } from '@playwright/test';
 import { test } from '../test-options';
 import { PageManager } from '../page-objects/pageManager';
 import { faker } from '@faker-js/faker';
-import { argosScreenshot as argosSnap } from './utils/argos';
+//import { argosScreenshot as argosSnap } from './utils/argos';
+import { argosSnap } from './utils/argos';
+
 import * as fs from 'fs';
 
 const ensureScreenshotsDir = () => {

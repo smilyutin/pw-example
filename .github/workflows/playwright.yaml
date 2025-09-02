@@ -2,9 +2,9 @@ name: Playwright Tests
 
 on:
   push:
-    branches: ["dev*"]          # runs on dev, dev_ex, dev123, etc.
+    branches: ["dev*"]
   pull_request:
-    branches: ["dev*"]          # PRs whose base branch matches dev*
+    branches: ["dev*"]
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '16'      # Angular build stays on Node 16
+          node-version: '16'           # Angular build on Node 16
           cache: 'npm'
 
       - name: Install Angular deps
@@ -58,13 +58,12 @@ jobs:
       QA_URL: http://localhost:4200
       QA_EXTERNAL_URL: 'https://www.globalsqa.com/demo-site/draganddrop/#Photo%20Manager'
 
-      # ---- Argos config (safe defaults) ------------------------------------
+      # ---- Argos config -----------------------------------------------------
       ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN || '' }}
       ARGOS_BRANCH: ${{ github.ref_name }}
       ARGOS_BASE_BRANCH: main
       ARGOS_COMMIT: ${{ github.sha }}
       ARGOS_CI: github-actions
-      # If you ever shard tests, wire these from a matrix:
       ARGOS_PARALLEL_TOTAL: "1"
       ARGOS_PARALLEL_INDEX: "0"
 
@@ -73,7 +72,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'       # Playwright requires >= 18
+          node-version: '20'           # Playwright requires >= 18
           cache: 'npm'
 
       - name: Install test deps
@@ -98,7 +97,6 @@ jobs:
           name: dist
           path: dist
 
-      # Quick Argos env sanity (doesn't print the token)
       - name: Argos env summary
         run: |
           echo "ARGOS token set?: $([ -n \"$ARGOS_TOKEN\" ] && echo yes || echo no)"
@@ -108,24 +106,41 @@ jobs:
           echo "ARGOS_CI=$ARGOS_CI"
           echo "ARGOS_PARALLEL_TOTAL=$ARGOS_PARALLEL_TOTAL ARGOS_PARALLEL_INDEX=$ARGOS_PARALLEL_INDEX"
 
-      # Install Argos ONLY if a token exists; don't touch lockfile; ignore peer conflicts
       - name: Install Argos (lenient)
         id: argos_install
         if: ${{ env.ARGOS_TOKEN != '' }}
         continue-on-error: true
         run: npm install -D --no-save --legacy-peer-deps --no-audit --no-fund @argos-ci/playwright
 
-      # Run with Argos reporter when available…
+      - name: Verify Argos reporter is resolvable
+        if: ${{ env.ARGOS_TOKEN != '' && steps.argos_install.outcome == 'success' }}
+        run: node -e "console.log(require.resolve('@argos-ci/playwright')); console.log('Argos reporter RESOLVED ✅')"
+
       - name: Playwright tests (with Argos)
         if: ${{ env.ARGOS_TOKEN != '' && steps.argos_install.outcome == 'success' }}
+        env:
+          DEBUG: "argos:*"
         run: npx playwright test -c playwright.argos.config.ts --reporter=line
 
-      # …otherwise fall back to default reporter
       - name: Playwright tests (no Argos)
         if: ${{ env.ARGOS_TOKEN == '' || steps.argos_install.outcome != 'success' }}
         run: npx playwright test --reporter=line
 
-      # Upload HTML report when something fails
+      # Quote names with colons to keep YAML happy
+      - name: "Argos debug: list snapshots"
+        if: always()
+        run: |
+          echo "Contents of ./.argos-screenshots (if any):"
+          ls -la .argos-screenshots || echo "(no directory)"
+
+      - name: "Upload Argos debug artifact"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: argos-snapshots
+          path: .argos-screenshots/**
+          if-no-files-found: ignore
+
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
