@@ -18,5 +18,5 @@ test('testing with agros ci', async ({ page }) => {
   await pm.navigateTo().datepickerPage();
   await argosSnap(page, 'date picker page');
 
-  // add more steps + argosSnap(...) as needed
+
 });
