@@ -25,9 +25,9 @@ Run the Angular app locally (development mode):
 
 The app will be available at `http://localhost:4200` by default.
 
-Add agents if needed:
+Install Playwright browsers if needed:
 
->npx playwright init-agents
+> npx playwright install
 
 ---
 

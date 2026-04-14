@@ -1,7 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { tooltip } from 'leaflet'
-import { using } from 'rxjs'
-import { argosScreenshot } from "@argos-ci/playwright";
 
 test.describe.configure({ mode: 'parallel' })
 
@@ -100,9 +97,9 @@ test(`list and dropdowns`, async ({ page }) => {
         "Corporate": "rgb(255, 255, 255)"
     }
     await dropDownMenu.click() //clicking on the dropdown menu to open it again
-    for (const color in colors) {
+    for (const [color, expectedColor] of Object.entries(colors)) {
         await optionList.filter({ hasText: color }).click() //clicking on the item with text "Light", "Dark", "Cosmic" or "Corporate"
-        await expect(header).toHaveCSS(`background-color`, colors[color]) //asserting that the header has this background color
+        await expect(header).toHaveCSS(`background-color`, expectedColor) //asserting that the header has this background color
         console.log(`Header background color for ${color} is: ${await dropDownMenu.textContent()}`) //printing header background color to console
         if (color !== "Corporate") {
             await dropDownMenu.click() //clicking on the dropdown menu to open it again
@@ -116,12 +113,12 @@ test(`tooltip`, async ({ page }) => {
     await page.getByText(`Tooltip`).click()
 
     const toolTipCard = page.locator(`nb-card`, { hasText: "Tooltip Placement" })
-    await toolTipCard.getByRole(`button`, { name: `TOP` }).hover() //hovering over the button with text "Top"
+    await toolTipCard.getByRole(`button`, { name: `Top` }).hover() //hovering over the button with text "Top"
 
-    page.getByRole(`tooltip`) //this will return the tooltip element
-    const tooltip = await page.locator(`nb-tooltip`).textContent() //extracting tooltip text
-    expect(tooltip).toEqual(`This is a tooltip`) //asserting that the tooltip
-    console.log(`Tooltip text: ${tooltip}`) //printing tooltip text to console
+    const tooltip = page.locator(`nb-tooltip`)
+    await expect(tooltip).toBeVisible()
+    await expect(tooltip).toHaveText(`This is a tooltip`)
+    console.log(`Tooltip text: ${await tooltip.textContent()}`) //printing tooltip text to console
 
 })
 
@@ -196,11 +193,11 @@ test(`datepicker`, async ({ page }) => {
     const expectedYear = date.getFullYear()
     const dateToAssert = `${expectedMonthShort} ${expectedDate}, ${expectedYear}` //formatting the date to assert
 
-    let calendarMonthAndYear = await page.locator(`nb-calendar-view-mode`).textContent()
+    let calendarMonthAndYear = await page.locator(`nb-calendar-view-mode`).textContent() ?? ''
     const expectedMonthAndYear = `${expectedMonthLong} ${expectedYear}` //getting the month and year from the calendar
     while (!calendarMonthAndYear.includes(expectedMonthAndYear)) { //looping until the calendar shows the expected month and year
         await page.locator(`nb-calendar-pageable-navigation [data-name="chevron-right"]`).click() //clicking on
-        calendarMonthAndYear = await page.locator(`nb-calendar-view-mode`).textContent()
+        calendarMonthAndYear = await page.locator(`nb-calendar-view-mode`).textContent() ?? ''
     }
 
     await page.locator(`[class="day-cell ng-star-inserted"]`).getByText(expectedDate, { exact: true }).click() //clicking on the day 15 in the calendar
@@ -224,6 +221,7 @@ test(`sliders`, async ({ page }) => {
     await tempBox.scrollIntoViewIfNeeded() //scrolling the temperature box into view
 
     const box = await tempBox.boundingBox() //getting the bounding box of the temperature box
+    if (!box) throw new Error('Temperature box not visible or has no bounding box')
     const x = box.x + box.width / 2 //calculating the x coordinate of the center of the box
     const y = box.y + box.height / 2 //calculating the y coordinate of the center of the box
     await page.mouse.move(x, y) //moving the mouse to the center of the box     

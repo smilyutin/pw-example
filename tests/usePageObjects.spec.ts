@@ -77,10 +77,10 @@ test('testing with agros ci', async ({ page }) => {
   const pm = new PageManager(page);
 
   await pm.navigateTo().formLayoutsPage();
-  await argosSnap(page, 'forms layout pages');
+  await argosSnap(page, 'forms layout page');
 
   await pm.navigateTo().datepickerPage();
-  await argosSnap(page, 'date picker pagess');
+  await argosSnap(page, 'date picker page');
 
   // add more steps + argosSnap(...) as needed
 });

@@ -8,13 +8,13 @@ if (Number.isNaN(major)) {
 }
 
 if (major < 18) {
-  console.log(`postinstall: Node ${process.versions.node} < 18 → skipping Playwright install.`);
+  console.log(`postinstall: Node ${process.versions.node} < 18 → skipping Playwright browser install.`);
   process.exit(0);
 }
 
 try {
-  console.log(`postinstall: Node ${process.versions.node} ≥ 18 → installing Playwright...`);
-  execSync('npm i -D @playwright/test@1.55.0 playwright@1.55.0', { stdio: 'inherit' });
+  console.log(`postinstall: Node ${process.versions.node} ≥ 18 → installing Playwright browsers...`);
+  execSync('npx playwright install --with-deps', { stdio: 'inherit' });
   // Argos only in Node >= 18 as well (optional)
   // execSync('npm i -D @argos-ci/playwright@^5', { stdio: 'inherit' });
   console.log('postinstall: Playwright installed.');
