@@ -93,7 +93,7 @@
     "rimraf": "2.6.1",
     "stylelint": "^15.6.0",
     "ts-node": "3.2.2",
-    "typescript": "~4.6.4",
+    "typescript": "^5.4.0",
     "webpack": "^5"
   },
   "description": "This is modified and more lightweight version of original application to practice UI Automation with Playwright.",
