@@ -15,6 +15,6 @@ async function snap(page: any, name: string) {
 
 test('argos smoke', async ({ page }) => {
   // hit your app root (served by Playwright webServer)
-  await page.goto(process.env.QA_URL || 'http://127.0.0.1:4200/');
+  await page.goto(process.env.QA_URL || 'http://localhost:4200/');
   await snap(page, 'Landing');
 });

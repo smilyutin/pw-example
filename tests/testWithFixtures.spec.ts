@@ -42,6 +42,6 @@ test.describe('Fixtures demo', () => {
         );
     });
 
-    console.log(`✅ Fixtures demo submitted with ${email}/${password} and ${randomFullName}/${randomEmail}`);
+    console.log(`Fixtures demo submitted with ${email}/${password} and ${randomFullName}/${randomEmail}`);
   });
 });
