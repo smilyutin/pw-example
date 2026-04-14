@@ -1,5 +1,4 @@
 import {test, expect} from '@playwright/test'
-import { time } from 'console';
     
 test.beforeEach(async ({page}, testInfo) => {
     await page.goto(process.env.URL || 'http://uitestingplayground.com')
@@ -12,12 +11,10 @@ test(`auto waiting`, async ({page}) => {
     const successButton = page.locator(`.bg-success`)
     await successButton.waitFor({state: 'visible'})
     await successButton.click()
-
-    const text = await successButton.textContent()
     await successButton.waitFor({state: 'attached'})
-    const textContents = await successButton.allTextContents()
+    const text = await successButton.textContent()
 
-    expect(textContents).toContain(`Data loaded with AJAX get request.`)
+    expect(text).toContain(`Data loaded with AJAX get request.`)
 
     await expect(successButton).toHaveText(`Data loaded with AJAX get request.`, {timeout: 30000})
 
