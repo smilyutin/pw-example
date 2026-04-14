@@ -10,7 +10,7 @@ delete process.env.PWTEST_CONNECT_WS_ENDPOINT;
 const BASE =
   process.env.QA_URL ||
   process.env.BASE_URL ||
-  'http://127.0.0.1:4200';
+  'http://localhost:4200';
 
 export default defineConfig({
   testDir: './tests',
@@ -39,7 +39,7 @@ export default defineConfig({
   webServer: {
     command: process.env.CI
       ? 'npx http-server ./dist -p 4200 -s -c-1'
-      : 'npx ng serve --configuration development --port 4200',
+      : 'npx ng serve --port 4200',
     url: BASE,                      // honors QA_URL/BASE_URL overrides
     reuseExistingServer: true,      // avoids "port already used" locally & in CI re-runs
     timeout: 120_000,

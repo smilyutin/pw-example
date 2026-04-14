@@ -2,22 +2,22 @@ import {test, expect} from '@playwright/test'
 import { time } from 'console';
     
 test.beforeEach(async ({page}, testInfo) => {
-    await page.goto(process.env.URL)
+    await page.goto(process.env.URL || 'http://uitestingplayground.com')
     await page.locator('a[href="/ajax"]').click();
     await page.getByText(`Button Triggering AJAX Request`).click()
     testInfo.setTimeout(testInfo.timeout + 10000); // increase timeout for this test 
 })
 
-test.skip(`auto waiting`, async ({page}) => {
-    const successButton = page.locator(`.bg-succes`)
-    // await successButton.waitFor({state: 'visible'})
-    // await successButton.click()
+test(`auto waiting`, async ({page}) => {
+    const successButton = page.locator(`.bg-success`)
+    await successButton.waitFor({state: 'visible'})
+    await successButton.click()
 
-    //const text = await successButton.textContent()
-    // await successButton.waitFor({state: 'attached'})
-    // const text = await successButton.allTextContents()
+    const text = await successButton.textContent()
+    await successButton.waitFor({state: 'attached'})
+    const textContents = await successButton.allTextContents()
 
-    //expect(text).toContain(`Data loaded with AJAX get request.`)
+    expect(textContents).toContain(`Data loaded with AJAX get request.`)
 
     await expect(successButton).toHaveText(`Data loaded with AJAX get request.`, {timeout: 30000})
 

@@ -2,7 +2,7 @@
 import { test } from '@playwright/test';
 import { PageManager } from '../page-objects/pageManager';
 import { argosSnap } from './utils/argos';
-//import { argosScreenshot as argosSnap } from './utils/argos'; // ✅ single source of truth
+//import { argosScreenshot as argosSnap } from './utils/argos'; // single source of truth
 
 // Start the Angular app before each test
 test.beforeEach(async ({ page }) => {
@@ -17,6 +17,5 @@ test('testing with agros ci', async ({ page }) => {
 
   await pm.navigateTo().datepickerPage();
   await argosSnap(page, 'date picker page');
-
 
 });
