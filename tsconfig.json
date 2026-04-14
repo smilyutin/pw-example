@@ -6,7 +6,7 @@
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "target": "es2020",
     "typeRoots": [
@@ -16,7 +16,7 @@
       "node"
     ],
     "lib": [
-      "es2017",
+      "es2020",
       "dom"
     ],
     "plugins": []
